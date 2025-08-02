@@ -1,12 +1,18 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { setGlobalRouter } from "../navigation/globalNavigation";
+import { loadToken } from "@/services/authService";
 
 export default function RootLayout() {
   const router = useRouter();
 
+  const initAuth = async () => {
+    await loadToken();
+  }
+
   useEffect(() => {
     setGlobalRouter(router);
+    initAuth()
   }, [router]);
 
   return (

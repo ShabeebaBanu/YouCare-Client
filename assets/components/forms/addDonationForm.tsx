@@ -14,17 +14,27 @@ import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
-import { MODE_OF_DELIVERY_DONATION } from "@/constants/data";
 
 import { getAllCategory } from "../../../services/categorService";
+import { getAllDistrict } from "../../../services/districtService";
+import { createDonation } from "../../../services/donationService";
 
 type Category = {
   _id: string;
   name: string;
 };
 
+type District = {
+  _id: string;
+  name: string;
+};
+
+const allowedImageExtension = ['jpg', 'jpeg', 'png'];
+
 const AddDonationForm = () => {
   const [categoryList, setCategoryList] = useState<Category[]>([]);
+  const [districtList, setDistrictList] = useState<District[]>([]);
+
   const [title, setTitle] = useState("");
   const [item, setItem] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -35,20 +45,23 @@ const AddDonationForm = () => {
   const [selectedCategory, setSelectedCategory] = useState(""); 
   const [mode, setMode] = useState("");
   const [address, setAddress] = useState("");
+  const [district, setDistrict] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
   const isCustomCategory = selectedCategory === "__custom__";
 
   useEffect(() => {
-    const fetchAllCategories = async () => {
+    const fetchAllCategoriesAndDistricts = async () => {
       try {
         const categories = await getAllCategory();
+        const districts = await getAllDistrict();
         setCategoryList(categories);
+        setDistrictList(districts);
       } catch (error) {
         alert("Failed to fetch categories: " + error);
       }
     };
-    fetchAllCategories();
+    fetchAllCategoriesAndDistricts();
   }, []);
 
   const handlePickerChange = (value: string) => {
@@ -65,18 +78,46 @@ const AddDonationForm = () => {
   };
 
   const handleOnAddDonation = async () => {
-    console.log("Submitted form with data:", {
-      title,
-      item,
-      quantity,
-      description,
-      name,
-      phone,
-      category,
-      mode,
-      address,
-      images,
-    });
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("item", item);
+      formData.append("quantity", quantity);
+      formData.append("description", description);
+      formData.append("donerName", name);
+      formData.append("donerPhone", phone);
+      formData.append("category", category);
+      formData.append("delivary", mode);
+      formData.append("pickupAddress", address);
+      formData.append("district", district);
+      
+      images.forEach((uri, index) => {
+        const fileName = uri.split("/").pop() || `image_${index}.jpg`;
+        const fileExtension = fileName.split(".").pop()?.toLowerCase();
+
+        if (!allowedImageExtension.includes(fileExtension || '')) {
+          alert(`Invalid file type: ${fileExtension}`);
+          return;
+        }
+
+        formData.append("images", {
+          uri,
+          name: fileName,
+          type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
+        } as any);
+      });
+
+      const response = await createDonation(formData);
+      
+      if (response.ok) {
+        alert("Donation Created Successfullt!");
+      } else {
+        alert("Failed to create donation: " + response.message);
+      }
+    } catch (error) {
+      console.error("Error submitting donation:", error);
+      alert("Error submitting donation: " + error);
+    }
   };
 
   const handleOnCancel = () => {
@@ -84,16 +125,19 @@ const AddDonationForm = () => {
   };
 
   const pickImage = async () => {
-    if (images.length >= 3) return;
+    if (images.length >= 2) return;
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
+      base64: false,
+      exif: false
     });
 
     if (!result.canceled && result.assets.length > 0) {
       const uri = result.assets[0].uri;
+      console.log("Picked image URI:", uri);
       setImages((prev) => [...prev, uri]);
     }
   };
@@ -184,6 +228,17 @@ const AddDonationForm = () => {
             onChangeText={setPhone}
           />
 
+          <Picker
+            selectedValue={district}
+            onValueChange={(value) => setDistrict(value)}
+            style={styles.input}
+          >
+            <Picker.Item label="Select District" value="" />
+            {districtList.map((dist) => (
+              <Picker.Item label={dist.name} value={dist.name} key={dist._id} />
+            ))}
+          </Picker>
+
           <TextInput
             style={styles.input}
             placeholder="Pickup Address"
@@ -223,7 +278,7 @@ const AddDonationForm = () => {
                 </TouchableOpacity>
               </View>
             ))}
-            {images.length < 3 && (
+            {images.length < 2 && (
               <TouchableOpacity onPress={pickImage} style={styles.imageUploadBox}>
                 <Text style={{ color: COLORS.textPlaceHolder, fontSize: 20 }}>+</Text>
               </TouchableOpacity>

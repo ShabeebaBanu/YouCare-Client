@@ -6,6 +6,7 @@ import COLORS from "@/constants/colors";
 import { loginWithKeycloak } from "../../../services/authService";
 import { navigate } from "../../../navigation/globalNavigation";
 import { isPasswordValid } from '../../../util/validation'
+import { saveToken } from "../../../services/authService";
 
 const LoginForm = () => {
     const [username, setUsername] = useState('');
@@ -29,7 +30,8 @@ const LoginForm = () => {
         setError('');
         try {
             const responseData = await loginWithKeycloak(username, password);
-            console.log("Access Token", responseData.access_token);
+            const token = responseData.data.access_token;
+            await saveToken(token);
             navigate('/home/home');
         } catch (err) {
             console.error("Login Error : ", err);
