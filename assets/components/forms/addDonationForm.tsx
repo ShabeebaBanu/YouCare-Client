@@ -19,6 +19,8 @@ import { getAllCategory } from "../../../services/categorService";
 import { getAllDistrict } from "../../../services/districtService";
 import { createDonation } from "../../../services/donationService";
 
+import { getUserId } from "@/constants/config";
+
 type Category = {
   _id: string;
   name: string;
@@ -46,6 +48,7 @@ const AddDonationForm = () => {
   const [mode, setMode] = useState("");
   const [address, setAddress] = useState("");
   const [district, setDistrict] = useState("");
+  const [createdBy, setCreatedBy] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
   const isCustomCategory = selectedCategory === "__custom__";
@@ -55,8 +58,11 @@ const AddDonationForm = () => {
       try {
         const categories = await getAllCategory();
         const districts = await getAllDistrict();
+        const userId = getUserId();
+      
         setCategoryList(categories);
         setDistrictList(districts);
+        setCreatedBy(userId);
       } catch (error) {
         alert("Failed to fetch categories: " + error);
       }
@@ -90,6 +96,7 @@ const AddDonationForm = () => {
       formData.append("delivary", mode);
       formData.append("pickupAddress", address);
       formData.append("district", district);
+      formData.append('createdBy', createdBy);
       
       images.forEach((uri, index) => {
         const fileName = uri.split("/").pop() || `image_${index}.jpg`;

@@ -14,3 +14,13 @@ export const createDonation = async (donationData) => {
         throw error;
     }
 };
+
+export const getAllDonation = async () => {
+    try {
+        const response = await axios.get(`${API}/api/donation/all`);
+        return response.data.donations;
+    } catch (error) {
+        console.error("Fetching all Donations Failed:", error.response?.data || error);
+        throw error;
+    }
+};

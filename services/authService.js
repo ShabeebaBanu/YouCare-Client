@@ -1,7 +1,8 @@
 import axios from "axios";
 import { setAccessToken, clearAccessToken, config } from '../constants/config';
 import * as SecureStore from 'expo-secure-store';
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import { Platform } from 'react-native';
 
 const CLIENT_ID = config.KEYCLOAK_CLIENT;
 const CLIENT_SECRET = config.KEYCLOAK_CLIENT_SECRET;
@@ -31,29 +32,38 @@ export const loginWithKeycloak = async (username, password) => {
     }
 }
 
-
 export const saveToken = async (token) => {
     try {
-        await SecureStore.setItemAsync(TOKEN_KEY, token);
+        if (Platform.OS === 'web') {
+            localStorage.setItem(TOKEN_KEY, token);
+        } else {
+            await SecureStore.setItemAsync(TOKEN_KEY, token);
+        }
+     
         const decoded = jwtDecode(token);
-        
         setAccessToken(token, decoded.sub);
+
         return token;
     } catch (error) {
-        console.log("Failed to save :", error.message)
+        console.log("Failed to save :", error.message);
         alert('Failed to save token:', error);
     }
 }
 
-
 export const loadToken = async () => {
     try {
-        const token = await SecureStore.getItemAsync(TOKEN_KEY); // await it
+        let token;
+
+        if (Platform.OS === 'web') {
+            token = localStorage.getItem(TOKEN_KEY);
+        } else {
+            token = await SecureStore.getItemAsync(TOKEN_KEY);
+        }
+
         if (token) {
             const decoded = jwtDecode(token);
-            LOGGEDIN_USER_ID = decoded.sub;
-
-            setAccessToken(token, LOGGEDIN_USER_ID);
+            setAccessToken(token, decoded.sub);
+            
             return token;
         } else {
             alert('Please login');
@@ -65,10 +75,13 @@ export const loadToken = async () => {
     }
 }
 
-
 export const clearToken = async () => {
     try {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        if (Platform.OS === 'web') {
+            localStorage.removeItem(TOKEN_KEY);
+        } else {
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+        }
         clearAccessToken();
     } catch (error) {
         alert('Failed to clear token:', error);

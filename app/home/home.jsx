@@ -10,6 +10,9 @@ export default function Home() {
         navigate('/need/needList')
     };
 
+    const handleOnDonation = () => {
+        navigate('/donation/donationList')
+    };
 
   return (
     <View style={styles.container}>
@@ -23,6 +26,7 @@ export default function Home() {
          <CardMain
            imageUrl= {require('../../assets/images/donate1.jpeg')}
            title='See Who is Ready to Donate'
+           onPress={handleOnDonation}
          />
       </View>
       <Footer/>
