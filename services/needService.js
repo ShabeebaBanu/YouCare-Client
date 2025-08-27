@@ -24,3 +24,13 @@ export const getAllNeed = async () => {
         throw error;
     }
 };
+
+export const getNeedByNeedId = async (needId) => {
+    try {
+        const response = await axios.get(`${API}/api/need/${needId}`);
+        return response.data.need;
+    } catch (error) {
+        console.log("Fetching Need with ID Failed:". error.response?.data || error);
+        throw error;
+    }
+}

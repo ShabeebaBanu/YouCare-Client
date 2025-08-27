@@ -21,11 +21,14 @@ export default function RootLayout() {
   }}>
     <Stack.Screen name="index" options={{ title: "Welcome"}}/>
     <Stack.Screen name="auth/login" />
-    <Stack.Screen name="verifyPhone/verifyPhone" />
+    <Stack.Screen name="verifyEmail/verifyEmail" />
     <Stack.Screen name="home/home" />
     <Stack.Screen name="need/needList" />
+    <Stack.Screen name="need/needProfile" />
     <Stack.Screen name="profile/userProfile" />
     <Stack.Screen name="donation/donationList" />
+    <Stack.Screen name="donation/donationProfile" />
+    <Stack.Screen name="notification/notification" />
   </Stack>
 );
 }

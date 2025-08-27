@@ -18,12 +18,12 @@ export const setAccessToken = (token, userId) => {
   USER_ID = userId;
 };
 
-export const getAccessToken = () => ACCESS_TOKEN;
+export const getAccessToken = async () => Promise.resolve(ACCESS_TOKEN);
 
-export const getUserId = () => USER_ID;
+export const getUserId = async () => Promise.resolve(USER_ID);
 
-export const clearAccessToken = () => {
+export const clearAccessToken = async () => {
   ACCESS_TOKEN = null;
   USER_ID = null;
+  return Promise.resolve();
 };
-

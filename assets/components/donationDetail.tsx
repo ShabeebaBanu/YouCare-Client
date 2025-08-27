@@ -31,7 +31,7 @@ interface DetailProps {
   images: [];
 }
 
-const NeedDetail: React.FC<DetailProps> = ({
+const donationDetail: React.FC<DetailProps> = ({
   title,
   name,
   type,
@@ -40,6 +40,7 @@ const NeedDetail: React.FC<DetailProps> = ({
   description,
   quantity
 }) => {
+
   const handleOnDonate = () => {
     //navigate('');
   };
@@ -103,7 +104,14 @@ const NeedDetail: React.FC<DetailProps> = ({
           <View style={styles.buttonContainer}>
             <View style={styles.halfButton}>
               <SubmitButton
-                title="REQUEST HELP"
+                title="DONATE"
+                onPress={handleOnDonate}
+                buttonColor={COLORS.bgDark}
+              />
+            </View>
+            <View style={styles.halfButton}>
+              <SubmitButton
+                title="ADD TO WISHLIST"
                 onPress={handleOnAddToWishList}
                 buttonColor={COLORS.textHighlight}
               />
@@ -115,7 +123,7 @@ const NeedDetail: React.FC<DetailProps> = ({
   );
 };
 
-export default NeedDetail;
+export default donationDetail;
 
 const { width } = Dimensions.get('window');
 

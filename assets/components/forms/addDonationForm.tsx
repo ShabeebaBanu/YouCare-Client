@@ -58,7 +58,7 @@ const AddDonationForm = () => {
       try {
         const categories = await getAllCategory();
         const districts = await getAllDistrict();
-        const userId = getUserId();
+        const userId = await getUserId();
       
         setCategoryList(categories);
         setDistrictList(districts);
@@ -237,12 +237,12 @@ const AddDonationForm = () => {
 
           <Picker
             selectedValue={district}
-            onValueChange={(value) => setDistrict(value)}
+            onValueChange={setDistrict}
             style={styles.input}
           >
             <Picker.Item label="Select District" value="" />
             {districtList.map((dist) => (
-              <Picker.Item label={dist.name} value={dist.name} key={dist._id} />
+              <Picker.Item label={dist.name} value={dist._id} key={dist.name} />
             ))}
           </Picker>
 

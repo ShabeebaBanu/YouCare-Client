@@ -1,8 +1,8 @@
 import { View, StyleSheet, Image} from 'react-native'
 import COLORS from '@/constants/colors'
-import VerifyPhoneForm from '../../assets/components/forms/verifyPhoneForm'
+import VerifyEmailForm from "../../assets/components/forms/verifyEmailForm"
 
-export default function VerifyPhone() {
+export default function VerifyEmail() {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
@@ -12,7 +12,7 @@ export default function VerifyPhone() {
         />
       </View>
       <View style={styles.formContainer}>
-         <VerifyPhoneForm></VerifyPhoneForm>
+         <VerifyEmailForm></VerifyEmailForm>
       </View>
     </View>
   )

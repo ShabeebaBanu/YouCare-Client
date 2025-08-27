@@ -6,6 +6,7 @@ import CardMedium from '../../assets/components/cardMedium'
 import FilterTab from '../../assets/components/filterTab'
 import { getAllDonation } from '../../services/donationService'
 import { useEffect, useState } from 'react'
+import { useRouter } from "expo-router";
 
 type Donation = {
   _id: string;
@@ -24,6 +25,7 @@ type Donation = {
   district?: {
     _id: string;
     name: string;
+    province: string;
   };
   delivary?: string;
   createdBy?: string;
@@ -33,6 +35,8 @@ type Donation = {
 
 
 export default function DonationList() {
+  const router = useRouter();
+
   const [donationList, setDonationList] = useState<Donation[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,15 +61,24 @@ export default function DonationList() {
   fetchAllDonations();
   }, []);
 
+  const handleOnDonationSelect = (donationId: string) => {
+    router.push(`/donation/donationProfile?id=${donationId}`);
+  };
+
   const renderItem = ({ item }: { item: Donation }) => (
     <CardMedium
       key={item._id}
+      id={item._id}
+      usage='DONATION'
       imageUrl={ item }
       title={item.title}
       name={item.donerName ?? "Unknown"}
       userType="Individual"
+      createdBy={item.createdBy}
       district={item.district?.name ?? ""}
       date={item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
+      onPress={() => handleOnDonationSelect(item._id)}
+      buttonTitle='REQUEST'
     />
   );
 

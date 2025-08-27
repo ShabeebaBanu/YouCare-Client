@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -9,36 +9,90 @@ import {
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import CustomButtonSmall from "./customButtonSmall";
-import { navigate } from "../../navigation/globalNavigation";
+import { getUserId } from "@/constants/config";
+import { createWishList,
+         deleteWishlistById
+ } from "@/services/wishlistService";
+import { createDonationRequest } from "@/services/donationRequestService";
+
 
 interface CardMediumProps {
+  usage: string;
+  id: string;
   imageUrl: any;
   title: string;
   name: string;
   userType: string;
+  createdBy: any;
   district: string;
   date: string;
   onAddToWishList?: () => void;
   onPress?: () => void;
+  buttonTitle: string;
 }
 
 const CardMedium: React.FC<CardMediumProps> = ({
+  usage,
+  id,
   imageUrl,
   title,
   name,
   userType,
+  createdBy,
   district,
   date,
   onAddToWishList,
   onPress,
+  buttonTitle
 }) => {
 
-  const handleOnAddToWishList = () => {
-    
+  const handleButtonPress = async () => {
+    const userId = await getUserId();
+
+    try {
+      if (usage === "WISHLIST") {
+        // Remove from wishlist or view wishlist details
+        console.log("Wishlist button pressed for:", id);
+        // TODO: call your remove or view wishlist API
+        alert("Wishlist button clicked");
+      } 
+      else if (usage === "NEED") {
+        const payload = {
+          userId: userId,
+          needCreatedBy: createdBy,
+          needId: id,
+        };
+        const response = await createWishList(payload);
+        console.log("Wishlist API Response:", response);
+        alert("Wishlist created");
+      } 
+      else if (usage === "DONATION") {
+        const payload = {
+          userId: userId,
+          donerCreatedBy: createdBy,
+          donationId: id,
+        };
+        const response = await createDonationRequest(payload);
+        console.log("Donation Request API Response:", response);
+        alert("Donation Request Sent");
+      }
+    } catch (error) {
+      console.error(`Error handling ${usage} creation :`, error);
+    }
+  };
+
+  const handleRemoveWishlist = async () => {
+    try {
+      const response = await deleteWishlistById(id); 
+      console.log("Removed wishlist:", response);
+      alert("Wishlist item removed");
+    } catch (err) {
+      console.error("Error removing wishlist:", err);
+    }
   };
 
   const handleOnNeed = () => {
-    navigate('/need/needProfile')
+    if (onPress) onPress();
   };
 
   return (
@@ -52,15 +106,32 @@ const CardMedium: React.FC<CardMediumProps> = ({
         <Text style={styles.userType}>{userType}</Text>
       </View>
 
-      <View style={styles.details}>
-        <Text style={styles.district}>{district}</Text>
-        <Text style={styles.date}>{date}</Text>
+      <View style={[styles.details, usage === "WISHLIST" && styles.detailsRow]}>
+      <Text style={styles.district}>{district}</Text>
+      <Text style={styles.date}>{date}</Text>
+
+  {usage === "WISHLIST" ? (
+        <View style={styles.buttonRow}>
+          <CustomButtonSmall
+            title=" X "
+            onPress={handleRemoveWishlist}
+            buttonColor={COLORS.textgray}
+          />
+          <CustomButtonSmall
+            title={buttonTitle}
+            onPress={handleButtonPress}
+            buttonColor={COLORS.buttonOdd}
+          />
+        </View>
+      ) : (
         <CustomButtonSmall
-          title="Add to Wishlist"
-          onPress={handleOnAddToWishList}
+          title={buttonTitle}
+          onPress={handleButtonPress}
           buttonColor={COLORS.buttonOdd}
         />
-      </View>
+      )}
+    </View>
+
     </TouchableOpacity>
   );
 };
@@ -107,10 +178,20 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   details: {
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     alignItems: "flex-end",
     height: 60,
     marginLeft: 10,
+  },
+
+  detailsRow: {
+    alignItems: "flex-end",
+  },
+
+  buttonRow: {
+    flexDirection: "row",
+    gap: 6, 
+    marginTop: 5
   },
   district: {
     fontSize: SIZE.small,

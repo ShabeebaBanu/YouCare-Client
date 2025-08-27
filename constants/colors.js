@@ -5,14 +5,14 @@ const COLORS = {
     bgblue: "#78A5C8",
 
     textDark: "#172D44",
-    textLight: "#D4E8F7",
+    textLight: "#d4e8f7ca",
     textPlaceHolder: "#B9C2CB",
     textHighlight: "#CB7701",
     textOption: "#3E80B2",
     textgray: "#4C555E",
 
     buttonAccept: "#13A132",
-    buttonReject: "#CB0701",
+    buttonReject: "#cf3630ff",
     buttonOther: "#172D44",
     buttonOdd: "#CB7701",
 

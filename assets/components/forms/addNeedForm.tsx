@@ -66,7 +66,7 @@ const AddNeedForm = () => {
         
           setCategoryList(categories);
           setDistrictList(districts);
-          setCreatedBy(userId);
+          setCreatedBy(await userId);
         } catch (error) {
           alert("Failed to fetch categories: " + error);
         }

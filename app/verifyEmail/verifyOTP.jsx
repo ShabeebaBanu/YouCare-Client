@@ -1,8 +1,11 @@
 import { View, StyleSheet, Image} from 'react-native'
 import COLORS from '@/constants/colors'
 import VerifyOtpForm from '../../assets/components/forms/verifyOtpForm'
+import { useLocalSearchParams } from "expo-router";
 
 export default function VerifyOTP() {
+  const { email } =  useLocalSearchParams();
+
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
@@ -12,7 +15,7 @@ export default function VerifyOTP() {
         />
       </View>
       <View style={styles.formContainer}>
-         <VerifyOtpForm></VerifyOtpForm>
+         <VerifyOtpForm email={email}></VerifyOtpForm>
       </View>
     </View>
   )

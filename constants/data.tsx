@@ -27,7 +27,7 @@ export const DISTRICT_PROVINCE_MAP: { [key: string]: string } = {
   'Vavuniya': 'Northern'
 };
 
-export const USER_TYPES = ['Individual', 'Organization'];
+export const USER_TYPES = ['individual', 'organization'];
 
 export const DISTRICTS = [
   'Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo',

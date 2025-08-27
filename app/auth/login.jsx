@@ -20,7 +20,7 @@ export default function Login() {
          <LoginForm></LoginForm>
       </View>
       <View style={styles.path}>
-        <TouchableOpacity onPress={() => navigation.navigate('verifyPhone/verifyPhone')}>
+        <TouchableOpacity onPress={() => navigation.navigate('verifyEmail/verifyEmail')}>
             <Text style={styles.text}>
                 Do Not Have An Account
             </Text>

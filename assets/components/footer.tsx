@@ -24,7 +24,7 @@ const Footer = () => {
   };
 
   const handleOnNotification = () => {
-    navigate(""); // Add correct route
+    navigate("/notification/notification"); 
   };
 
   const handleOnProfile = () => {

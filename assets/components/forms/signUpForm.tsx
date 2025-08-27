@@ -1,29 +1,87 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { KeyboardAvoidingView, TextInput, View, Text, StyleSheet } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import SubmitButton from "../submitButton";
 import { navigate } from "../../../navigation/globalNavigation";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { DISTRICTS, USER_TYPES, DISTRICT_PROVINCE_MAP } from "../../../constants/data";
+import { USER_TYPES } from "../../../constants/data";
+import { createUser } from "@/services/userService";
+import { getAllDistrict } from "@/services/districtService";
+import { useLocalSearchParams } from "expo-router";
 
-const SignUpForm = () => {
+type District = {
+  _id: string;
+  name: string;
+  province: string;
+};
+
+const SignUpForm  = () => {
+  const { email } =useLocalSearchParams();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [district, setDistrict] = useState('');
+  const [province, setProvince] = useState('');
 
   const [userType, setUserType] = useState(USER_TYPES[0]);
-  const [district, setDistrict] = useState(DISTRICTS[0]);
-  const [province, setProvince] = useState(DISTRICT_PROVINCE_MAP[DISTRICTS[0]]);
+  const [districtList, setDistrictList] = useState<District[]>([]);
+
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      try {
+        const districts = await getAllDistrict();
+          
+        setDistrictList(districts);
+      } catch (error) {
+        alert("Failed to fetch Districts: " + error);
+      }
+    };
+      fetchDistricts();
+  }, []);
+  
+
 
   const handleOnSignUp = async () => {
-      navigate('/home/home')
+      try {
+      const payload = {
+        username: name,
+        email: email,       
+        password: password,
+        district: district,
+        province: province,
+        role: userType      
+      };
+
+      console.log("Payload:", payload);
+
+      const response = await createUser(payload);
+
+      if (response.success) {
+        alert("Success, Account created successfully");
+        navigate("/home/home");
+      } else {
+        alert("Error" + response.message || "Failed to create user");
+      }
+    } catch (error: any) {
+      if (error.response) {
+        alert("Error" + error.response.data.message || "Server error");
+      } else {
+        alert("Error" + error.message || "Unexpected error");
+      }
+    }
+        navigate('/auth/login');
   };
 
   const handleDistrictChange = (selectedDistrict: string) => {
     setDistrict(selectedDistrict);
-    setProvince(DISTRICT_PROVINCE_MAP[selectedDistrict] || '');
+
+    const selectedDistrictObj = districtList.find(
+      (dist) => dist.name === selectedDistrict
+    );
+
+    setProvince(selectedDistrictObj?.province || "");
   };
+
 
   return (
     <KeyboardAvoidingView style={styles.container}>
@@ -38,14 +96,11 @@ const SignUpForm = () => {
           onChangeText={setName}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={COLORS.textPlaceHolder}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-        />
+        <View style={styles.input}>
+          <Text style={styles.fixedText}>
+            {email ? email: "Email"}
+         </Text>
+        </View>
 
         <TextInput
           style={styles.input}
@@ -71,13 +126,16 @@ const SignUpForm = () => {
           onValueChange={handleDistrictChange}
           style={styles.input}
         >
-          {DISTRICTS.map((dist) => (
-            <Picker.Item label={dist} value={dist} key={dist} />
+          <Picker.Item label="Select District" value="" />
+          {districtList.map((dist) => (
+            <Picker.Item key={dist.name} label={dist.name} value={dist.name} />
           ))}
         </Picker>
 
         <View style={styles.input}>
-          <Text style={styles.provinceText}>{province}</Text>
+          <Text style={styles.fixedText}>
+            {province ? province : "Province"}
+         </Text>
         </View>
       </View>
 
@@ -113,8 +171,8 @@ const styles = StyleSheet.create({
     paddingVertical: SIZE.VerticlePaddingSmall,
     paddingHorizontal: SIZE.HorizontalPaddingSmall,
   },
-  provinceText: {
-    color: COLORS.textDark,
+  fixedText: {
+    color: COLORS.textPlaceHolder,
     fontSize: SIZE.small,
   },
   signupButton: {

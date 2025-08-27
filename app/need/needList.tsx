@@ -6,6 +6,7 @@ import Footer from '../../assets/components/footer';
 import CardMedium from '../../assets/components/cardMedium';
 import FilterTab from '../../assets/components/filterTab';
 import { getAllNeed } from '../../services/needService';
+import { useRouter } from "expo-router";
 
 type Need = {
   _id: string;
@@ -24,6 +25,7 @@ type Need = {
   district?: {
     _id: string;
     name: string;
+    province: string;
   };
   delivary?: string;
   createdBy?: string;
@@ -32,6 +34,8 @@ type Need = {
 };
 
 const NeedList = () => {
+  const router = useRouter();
+
   const [needList, setNeedList] = useState<Need[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,15 +60,24 @@ const NeedList = () => {
     fetchAllNeeds();
   }, []); 
 
+  const handleOnNeedSelect = (needId: string) => {
+    router.push(`/need/needProfile?id=${needId}`);
+  };
+
   const renderItem = ({ item }: { item: Need }) => (
     <CardMedium
       key={item._id}
+      usage="NEED"
+      id={item._id}
       imageUrl={ item }
       title={item.title}
       name={item.needyName ?? "Unknown"}
       userType="Individual"
+      createdBy={item.createdBy}
       district={item.district?.name ?? ""}
       date={item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
+      onPress={() => handleOnNeedSelect(item._id)}
+      buttonTitle="ADD TO WISHLIST"
     />
   );
 

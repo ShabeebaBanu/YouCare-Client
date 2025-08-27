@@ -3,8 +3,10 @@ import React from 'react'
 import COLORS from '@/constants/colors'
 import { useRouter } from "expo-router";
 import SignUpForm from '../../assets/components/forms/signUpForm'
+import { useLocalSearchParams } from "expo-router";
 
 export default function Signup() {
+  const { email } = useLocalSearchParams();
   const navigation = useRouter();
 
   return (

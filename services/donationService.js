@@ -24,3 +24,14 @@ export const getAllDonation = async () => {
         throw error;
     }
 };
+
+export const getDonationByDonationId = async (donationId) => {
+    try {
+        const response = await axios.get(`${API}/api/donation/${donationId}`);
+        return response.data.donation;
+    } catch (error) {
+        console.log("Fetching Donation with ID Failed:". error.response?.data || error);
+        throw error;
+    }
+}
+

@@ -1,32 +1,46 @@
 import React, { useState } from "react"
 import { KeyboardAvoidingView, TextInput } from "react-native";
 import { Text, StyleSheet , View} from "react-native";
-import { useRouter } from "expo-router";
+
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
 import { navigate } from "../../../navigation/globalNavigation";
+import { sendOtp } from '../../../services/userService'
+import { useRouter } from "expo-router";
 
-const VerifyPhoneForm = () => {
+const VerifyEmailForm = () => {
     const router = useRouter();
-    const [phone, setPhone] = useState('');
 
-    const handleOnSendOtp = () => {
-       navigate("/verifyPhone/verifyOTP");
+    const [email, setEmail] = useState('');
+
+    const handleOnSendOtp = async () => {
+       try {
+        const response = await sendOtp(email);
+        // if (!response.status) {
+        //    alert("Failed to sent OTP: " + response.message);
+        //    return;
+        // }
+        alert("OTP Sent: " + response.message);
+        router.push(`/verifyEmail/verifyOTP?email=${email}`);
+
+       } catch (error:any) {
+        alert("Error Sending OTP: " + error.response.data.message);
+       }   
     };
 
     return(
       <KeyboardAvoidingView style={styles.container}>
           <Text style={styles.title}>
-              VERIFY YOUR PHONE NUMBER
+              VERIFY YOUR Email
           </Text>
           <View>
                 <TextInput
                     style={styles.input}
-                    placeholder="Phone Number"
+                    placeholder="Email"
                     placeholderTextColor={COLORS.textPlaceHolder}
-                    value={phone}
-                    onChangeText={setPhone}
+                    value={email}
+                    onChangeText={setEmail}
                 />
            </View>
 
@@ -69,4 +83,4 @@ const styles = StyleSheet.create({
 });
 
 
-export default VerifyPhoneForm;
+export default VerifyEmailForm;
