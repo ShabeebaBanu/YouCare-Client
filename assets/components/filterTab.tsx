@@ -11,14 +11,65 @@ import { Ionicons } from "@expo/vector-icons";
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import FilterForm from "./forms/filterForm"; 
+import { navigate } from "../../navigation/globalNavigation"
+import { useRouter } from "expo-router";
+import { getNearByDonations } from "@/services/donationService";
+import { getNearByNeeeds } from "@/services/needService";
+import { getUserId } from "@/constants/config";
 
 interface FilterTabProps {
   title: string;
 }
 
 const FilterTab: React.FC<FilterTabProps> = ({ title }) => {
+  const router = useRouter();
+
   const [selectedFilter, setSelectedFilter] = useState<"all" | "nearby">("all");
   const [modalVisible, setModalVisible] = useState(false);
+
+  const handleOnAllSelect = () => {
+    setSelectedFilter("all");
+    if (title == "Needies") {
+      navigate("/need/needList");
+    } else if (title == "Doners") {
+      navigate("/donation/donationList");
+    } else {
+      navigate("/");
+    }
+  }
+   
+  const handleOnNearbyFilter = async () => {
+    setSelectedFilter("nearby");
+    const userId = await getUserId();
+    if (title == "Needies") {
+      try {
+        const response = await getNearByNeeeds(userId);
+        console.log("nearby needs: ", response);
+        router.push({
+          pathname: "/need/needList",
+          params: {needs: JSON.stringify(response)}
+        });
+      } catch (err: any) {
+        console.error("Failed to fetch nearby Needa:", err);
+        alert(err?.message || "Failed to load Needs");
+      }       
+    } else if (title == "Doners") {
+      try {
+        const response = await getNearByDonations(userId);
+        console.log("nearby donations: ", response);
+        router.push({
+          pathname: "/donation/donationList",
+          params: {donations: JSON.stringify(response)}
+        });
+      } catch (err: any) {
+        console.error("Failed to fetch nearby Donations:", err);
+        alert(err?.message || "Failed to load Donations");
+      } 
+    } else {
+      navigate("/");
+    }
+  }
+  
 
   return (
     <View style={styles.container}>
@@ -41,7 +92,7 @@ const FilterTab: React.FC<FilterTabProps> = ({ title }) => {
             styles.filterOption,
             selectedFilter === "all" && styles.selectedFilter,
           ]}
-          onPress={() => setSelectedFilter("all")}
+          onPress={handleOnAllSelect}
         >
           <Text
             style={[
@@ -58,7 +109,7 @@ const FilterTab: React.FC<FilterTabProps> = ({ title }) => {
             styles.filterOption,
             selectedFilter === "nearby" && styles.selectedFilter,
           ]}
-          onPress={() => setSelectedFilter("nearby")}
+          onPress={handleOnNearbyFilter}
         >
           <Text
             style={[
@@ -80,7 +131,7 @@ const FilterTab: React.FC<FilterTabProps> = ({ title }) => {
             >
               <Ionicons name="close" size={24} color={COLORS.textDark} />
             </TouchableOpacity>
-            <FilterForm />
+            <FilterForm section={title}/>
           </View>
         </View>
       </Modal>

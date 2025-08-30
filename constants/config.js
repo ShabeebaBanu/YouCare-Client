@@ -4,7 +4,7 @@ import { use } from "react";
 export const config = {
   KEYCLOAK_CLIENT: 'YouCare-Dev',
   KEYCLOAK_URL: 'http://192.168.8.156:8080/realms/YouCare/protocol/openid-connect/token',
-  KEYCLOAK_CLIENT_SECRET: 'LPTLBVHg9jsETfgFrUG0X0ubUMmGsWNA',
+  KEYCLOAK_CLIENT_SECRET: 'ws6ns2TlpurNcFPJLhqRQQbZgfynrw6p',
 };
 
 export const API = 'http://localhost:8000'

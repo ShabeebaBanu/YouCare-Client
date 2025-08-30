@@ -1,11 +1,15 @@
 import { API } from '../constants/config';
 import axios from 'axios';
+import { getAccessToken } from '../constants/config';
+import { use, useId } from 'react';
 
 export const createDonation = async (donationData) => {
     try {
+        const token = await getAccessToken(); 
         const response = await axios.post(`${API}/api/donation/create`, donationData, {
             headers: {
                 "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${token}`,
             }
         });
         return response.data;
@@ -30,7 +34,29 @@ export const getDonationByDonationId = async (donationId) => {
         const response = await axios.get(`${API}/api/donation/${donationId}`);
         return response.data.donation;
     } catch (error) {
-        console.log("Fetching Donation with ID Failed:". error.response?.data || error);
+        console.log("Fetching Donation Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+export const filterDonation = async (filterData) => {
+    try {
+        const response = await axios.post(`${API}/api/donation/filter/create`, filterData);
+        console.log("response: ", response);
+        return response.data.donations;
+    } catch (error) {
+        console.log("Filtering Donations Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+export const getNearByDonations = async (userId) => {
+    try {
+        const response = await axios.get(`${API}/api/donation/nearby/user/${userId}`);
+        console.log("response: ", response);
+        return response.data.data;
+    } catch (error) {
+        console.log("fetching nearby Donations Failed:". error.response?.data || error);
         throw error;
     }
 }

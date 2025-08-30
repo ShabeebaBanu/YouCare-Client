@@ -7,6 +7,7 @@ import FilterTab from '../../assets/components/filterTab'
 import { getAllDonation } from '../../services/donationService'
 import { useEffect, useState } from 'react'
 import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 type Donation = {
   _id: string;
@@ -27,6 +28,7 @@ type Donation = {
     name: string;
     province: string;
   };
+  userType: string;
   delivary?: string;
   createdBy?: string;
   createdAt?: string;
@@ -35,6 +37,7 @@ type Donation = {
 
 
 export default function DonationList() {
+  const { donations } = useLocalSearchParams();
   const router = useRouter();
 
   const [donationList, setDonationList] = useState<Donation[]>([]);
@@ -42,6 +45,14 @@ export default function DonationList() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+      if (donations) {
+        try {
+          const parsedDonations: Donation[] = JSON.parse(donations as string);
+          setDonationList(parsedDonations);
+        } catch {
+          setDonationList([]);
+        }
+      } else {
       const fetchAllDonations = async () => {
         setLoading(true);
         setError(null);
@@ -59,7 +70,8 @@ export default function DonationList() {
   };
 
   fetchAllDonations();
-  }, []);
+  }
+  }, [donations]);
 
   const handleOnDonationSelect = (donationId: string) => {
     router.push(`/donation/donationProfile?id=${donationId}`);
@@ -73,7 +85,7 @@ export default function DonationList() {
       imageUrl={ item }
       title={item.title}
       name={item.donerName ?? "Unknown"}
-      userType="Individual"
+      userType={item.userType ?? ""}
       createdBy={item.createdBy}
       district={item.district?.name ?? ""}
       date={item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}

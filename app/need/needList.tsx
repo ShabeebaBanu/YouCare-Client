@@ -7,6 +7,7 @@ import CardMedium from '../../assets/components/cardMedium';
 import FilterTab from '../../assets/components/filterTab';
 import { getAllNeed } from '../../services/needService';
 import { useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 
 type Need = {
   _id: string;
@@ -27,6 +28,7 @@ type Need = {
     name: string;
     province: string;
   };
+  userType: string;
   delivary?: string;
   createdBy?: string;
   createdAt?: string;
@@ -34,6 +36,7 @@ type Need = {
 };
 
 const NeedList = () => {
+  const { needs } = useLocalSearchParams();
   const router = useRouter();
 
   const [needList, setNeedList] = useState<Need[]>([]);
@@ -41,24 +44,29 @@ const NeedList = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAllNeeds = async () => {
-      setLoading(true);
-      setError(null);
+    if (needs) {
       try {
-        const response = await getAllNeed();
-        console.log("needs: ", response);
-        const needs: Need[] = Array.isArray(response) ? response : response.data ?? [];
-        setNeedList(needs);
-      } catch (err: any) {
-        console.error("Failed to fetch Needs:", err);
-        setError(err?.message || "Failed to load Needs");
-      } finally {
-        setLoading(false);
+        const parsedNeeds: Need[] = JSON.parse(needs as string);
+        setNeedList(parsedNeeds);
+      } catch {
+        setNeedList([]);
       }
-    };
-
-    fetchAllNeeds();
-  }, []); 
+    } else {
+      const fetchAllNeeds = async () => {
+        setLoading(true);
+        try {
+          const response = await getAllNeed();
+          const allNeeds: Need[] = Array.isArray(response) ? response : response.data ?? [];
+          setNeedList(allNeeds);
+        } catch (err) {
+          console.error("Failed to fetch Needs:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAllNeeds();
+    }
+  }, [needs]); 
 
   const handleOnNeedSelect = (needId: string) => {
     router.push(`/need/needProfile?id=${needId}`);
@@ -72,7 +80,7 @@ const NeedList = () => {
       imageUrl={ item }
       title={item.title}
       name={item.needyName ?? "Unknown"}
-      userType="Individual"
+      userType={item.userType ?? ""}
       createdBy={item.createdBy}
       district={item.district?.name ?? ""}
       date={item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ""}
