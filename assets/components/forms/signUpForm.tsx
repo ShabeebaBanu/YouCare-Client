@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { KeyboardAvoidingView, TextInput, View, Text, StyleSheet } from "react-native";
+import {
+  KeyboardAvoidingView,
+  TextInput,
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Platform,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import SubmitButton from "../submitButton";
 import { navigate } from "../../../navigation/globalNavigation";
@@ -16,12 +24,14 @@ type District = {
   province: string;
 };
 
-const SignUpForm  = () => {
-  const { email } =useLocalSearchParams();
-  const [name, setName] = useState('');
-  const [password, setPassword] = useState('');
-  const [district, setDistrict] = useState('');
-  const [province, setProvince] = useState('');
+const SignUpForm = () => {
+  const { email } = useLocalSearchParams();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [district, setDistrict] = useState("");
+  const [province, setProvince] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [organizationAddress, setOrganizationAddress] = useState("");
 
   const [userType, setUserType] = useState(USER_TYPES[0]);
   const [districtList, setDistrictList] = useState<District[]>([]);
@@ -30,27 +40,29 @@ const SignUpForm  = () => {
     const fetchDistricts = async () => {
       try {
         const districts = await getAllDistrict();
-          
         setDistrictList(districts);
       } catch (error) {
         alert("Failed to fetch Districts: " + error);
       }
     };
-      fetchDistricts();
+    fetchDistricts();
   }, []);
-  
-
 
   const handleOnSignUp = async () => {
-      try {
-      const payload = {
+    try {
+      const payload: any = {
         username: name,
-        email: email,       
+        email: email,
         password: password,
         district: district,
         province: province,
-        role: userType      
+        role: userType,
       };
+
+      if (userType === "organization") {
+        payload.organizationName = organizationName;
+        payload.organizationAddress = organizationAddress;
+      }
 
       console.log("Payload:", payload);
 
@@ -60,16 +72,16 @@ const SignUpForm  = () => {
         alert("Success, Account created successfully");
         navigate("/home/home");
       } else {
-        alert("Error" + response.message || "Failed to create user");
+        alert("Error " + (response.message || "Failed to create user"));
       }
     } catch (error: any) {
       if (error.response) {
-        alert("Error" + error.response.data.message || "Server error");
+        alert("Error " + (error.response.data.message || "Server error"));
       } else {
-        alert("Error" + error.message || "Unexpected error");
+        alert("Error " + (error.message || "Unexpected error"));
       }
     }
-        navigate('/auth/login');
+    navigate("/auth/login");
   };
 
   const handleDistrictChange = (selectedDistrict: string) => {
@@ -82,70 +94,95 @@ const SignUpForm  = () => {
     setProvince(selectedDistrictObj?.province || "");
   };
 
-
   return (
-    <KeyboardAvoidingView style={styles.container}>
-      <Text style={styles.title}>CREATE ACCOUNT</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>CREATE ACCOUNT</Text>
 
-      <View>
-        <TextInput
-          style={styles.input}
-          placeholder="Name"
-          placeholderTextColor={COLORS.textPlaceHolder}
-          value={name}
-          onChangeText={setName}
-        />
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            placeholderTextColor={COLORS.textPlaceHolder}
+            value={name}
+            onChangeText={setName}
+          />
 
-        <View style={styles.input}>
-          <Text style={styles.fixedText}>
-            {email ? email: "Email"}
-         </Text>
+          <View style={styles.input}>
+            <Text style={styles.fixedText}>{email ? email : "Email"}</Text>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={COLORS.textPlaceHolder}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <Picker
+            selectedValue={userType}
+            onValueChange={setUserType}
+            style={styles.input}
+          >
+            {USER_TYPES.map((type) => (
+              <Picker.Item label={type} value={type} key={type} />
+            ))}
+          </Picker>
+
+          {/* Conditional fields for Organization */}
+          {userType === "organization" && (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Organization Name"
+                placeholderTextColor={COLORS.textPlaceHolder}
+                value={organizationName}
+                onChangeText={setOrganizationName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Organization Address"
+                placeholderTextColor={COLORS.textPlaceHolder}
+                value={organizationAddress}
+                onChangeText={setOrganizationAddress}
+              />
+            </>
+          )}
+
+          <Picker
+            selectedValue={district}
+            onValueChange={handleDistrictChange}
+            style={styles.input}
+          >
+            <Picker.Item label="Select District" value="" />
+            {districtList.map((dist) => (
+              <Picker.Item key={dist.name} label={dist.name} value={dist.name} />
+            ))}
+          </Picker>
+
+          <View style={styles.input}>
+            <Text style={styles.fixedText}>
+              {province ? province : "Province"}
+            </Text>
+          </View>
         </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={COLORS.textPlaceHolder}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <Picker
-          selectedValue={userType}
-          onValueChange={setUserType}
-          style={styles.input}
-        >
-          {USER_TYPES.map((type) => (
-            <Picker.Item label={type} value={type} key={type} />
-          ))}
-        </Picker>
-
-        <Picker
-          selectedValue={district}
-          onValueChange={handleDistrictChange}
-          style={styles.input}
-        >
-          <Picker.Item label="Select District" value="" />
-          {districtList.map((dist) => (
-            <Picker.Item key={dist.name} label={dist.name} value={dist.name} />
-          ))}
-        </Picker>
-
-        <View style={styles.input}>
-          <Text style={styles.fixedText}>
-            {province ? province : "Province"}
-         </Text>
+        <View style={styles.signupButton}>
+          <SubmitButton
+            title="SIGN UP"
+            onPress={handleOnSignUp}
+            buttonColor={COLORS.buttonOther}
+          />
         </View>
-      </View>
-
-      <View style={styles.signupButton}>
-        <SubmitButton
-          title="SIGN UP"
-          onPress={handleOnSignUp}
-          buttonColor={COLORS.buttonOther}
-        />
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -155,6 +192,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "flex-start",
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   title: {
     fontSize: SIZE.medium,

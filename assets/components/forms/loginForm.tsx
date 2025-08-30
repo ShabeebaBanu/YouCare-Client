@@ -20,11 +20,11 @@ const LoginForm = () => {
             return;
         }
 
-        const passwordValidationMessage = isPasswordValid(password);
-        if (passwordValidationMessage) {
-            setError(passwordValidationMessage);
-            return;
-        }
+        // const passwordValidationMessage = isPasswordValid(password);
+        // if (passwordValidationMessage) {
+        //     setError(passwordValidationMessage);
+        //     return;
+        // }
 
         setIsLoading(true);
         setError('');

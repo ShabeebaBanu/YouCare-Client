@@ -12,6 +12,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-, "app/auth/_layout.jsx", "app/auth/login.jsx", "app/auth/signup.jsx", "app/_layout.jsx", "app/index.jsx", "services/authService.js"  ]
+, "app/auth/_layout.jsx", "app/auth/login.jsx", "app/auth/signup.jsx", "app/_layout.jsx", "app/index.jsx", "services/authService.js", "app/profile/userProfile.jsx", "assets/components/forms/profileForm.jsx"  ]
 }
 

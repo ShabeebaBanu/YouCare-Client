@@ -1,13 +1,5 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from "react-native";
-
-// Update these paths based on your project structure
+import React, { useState, useMemo } from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
 
@@ -22,6 +14,11 @@ const TABS = ["Personal", "Donation", "Need", "Volunteer"];
 const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPress }) => {
   const [activeTab, setActiveTab] = useState("Personal");
 
+  const bgColor = useMemo(() => {
+    const colors = ["#219dadff", "#25b338ff", "#156ae1ff", "#e57327ff", "#15e3cfff"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }, []);
+
   const handleTabPress = (tab: string) => {
     setActiveTab(tab);
     if (onTabPress) {
@@ -31,12 +28,9 @@ const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPres
 
   return (
     <View style={styles.container}>
-
-      <View style={styles.imageWrapper}>
-        <Image
-          source={require("../../assets/images/LogoLight.png")} 
-          style={styles.profileImage}
-        />
+      {/* Profile Circle */}
+      <View style={[styles.circle, { backgroundColor: bgColor }]}>
+        <Text style={styles.circleText}>{name.charAt(0).toUpperCase()}</Text>
       </View>
 
       <Text style={styles.name}>{name}</Text>
@@ -70,19 +64,18 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 3,
   },
-  imageWrapper: {
+  circle: {
     width: 90,
     height: 90,
-    borderRadius: 50,
-    overflow: "hidden",
-    backgroundColor: COLORS.white,
-    borderWidth: 2,
-    borderColor: COLORS.borderSub,
+    borderRadius: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
   },
-  profileImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+  circleText: {
+    fontSize: SIZE.large,
+    color: COLORS.white,
+    fontWeight: "bold",
   },
   name: {
     fontSize: SIZE.medium,
@@ -109,7 +102,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     backgroundColor: COLORS.buttonOther,
-    borderRadius: SIZE.buttonRadiusSmall
+    borderRadius: SIZE.buttonRadiusSmall,
   },
   tabText: {
     fontSize: SIZE.small,
@@ -120,6 +113,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
 
 export default HeaderProfile;

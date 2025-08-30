@@ -1,5 +1,6 @@
 import { API } from '../constants/config';
 import axios from 'axios';
+import { getAccessToken } from '../constants/config';
 
 export const sendOtp = async (emailData) => {
     try {
@@ -35,6 +36,58 @@ export const createUser = async (userDate) => {
         return response.data;
     } catch (error) {
         console.error("User creation Failed:", error.response?.data || error);
+        throw error;
+    }
+};
+
+export const getUserById = async (userId) => {
+    try {
+        const token = await getAccessToken(); 
+        const response = await axios.get(`${API}/api/user/${userId}`, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                "Authorization": `Bearer ${token}`,
+            }
+        });
+        return response.data.data;
+    } catch (error) {
+        console.error("Fetching User Details Failed:", error.response?.data || error);
+        throw error;
+    }
+};
+
+export const updateUserById = async (userId, updatedData) => {
+    try {
+        const token = await getAccessToken(); 
+        const response = await axios.put(`${API}/api/user/update/${userId}`, 
+            updatedData,{
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            }
+        });
+        console.log("User update response: ", response);
+        return response.data
+    } catch (error) {
+        console.error("updating User Details Failed:", error.response?.data || error);
+        throw error;
+    }
+};
+
+export const resetPassword = async (email, newPassword) => {
+    try {
+        const token = await getAccessToken(); 
+        const response = await axios.put(`${API}/api/user/reset-password/${email}`, 
+            newPassword,{
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`,
+            }
+        });
+        console.log("password reset response: ", response);
+        return response.data
+    } catch (error) {
+        console.error("Password reseting Failed:", error.response?.data || error);
         throw error;
     }
 };

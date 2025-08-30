@@ -5,7 +5,6 @@ import { Text, StyleSheet , View} from "react-native";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { navigate } from "../../../navigation/globalNavigation";
 import { sendOtp } from '../../../services/userService'
 import { useRouter } from "expo-router";
 
@@ -16,11 +15,13 @@ const VerifyEmailForm = () => {
 
     const handleOnSendOtp = async () => {
        try {
+        console.log("inside otp method")
         const response = await sendOtp(email);
-        // if (!response.status) {
-        //    alert("Failed to sent OTP: " + response.message);
-        //    return;
-        // }
+        console.log("response otp: ", response)
+        if (!response.success) {
+           alert("Failed to sent OTP: " + response.message);
+           return;
+        }
         alert("OTP Sent: " + response.message);
         router.push(`/verifyEmail/verifyOTP?email=${email}`);
 
