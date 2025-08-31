@@ -20,6 +20,7 @@ type Need = {
   needyName?: string;
   needyPhone?: string;
   delivaryAddress?: string;
+  userType?: string;
   district?: {
     _id: string;
     name: string;
@@ -74,7 +75,7 @@ export default function NeedProfile() {
         key={need._id}
         title={need.title}
         name={need.needyName ?? ""}
-        type="Individual" 
+        type={need.userType ?? ""}
         address={need.delivaryAddress ?? ""}
         phone={need.needyPhone ?? ""}
         description={need.description ?? ""}

@@ -17,9 +17,14 @@ import * as ImagePicker from "expo-image-picker";
 
 import { getAllCategory } from "../../../services/categorService";
 import { getAllDistrict } from "../../../services/districtService";
-import { createDonation } from "../../../services/donationService";
+import { createDonation, 
+         getDonationByDonationId,
+         updateDonation
+} from "../../../services/donationService";
 
 import { getUserId } from "@/constants/config";
+import { useLocalSearchParams } from "expo-router";
+import { navigate } from "../../../navigation/globalNavigation"
 
 type Category = {
   _id: string;
@@ -31,9 +36,18 @@ type District = {
   name: string;
 };
 
+interface AddDonationFormProps {
+  donationId?: string; 
+  onSuccess?: () => void; 
+}
+
+
 const allowedImageExtension = ['jpg', 'jpeg', 'png'];
 
-const AddDonationForm = () => {
+const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess }) => {
+  const { donationId: queryDonationId } = useLocalSearchParams<{ donationId?: string }>();
+  const finalDonationId = donationId || queryDonationId;
+
   const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [districtList, setDistrictList] = useState<District[]>([]);
 
@@ -54,21 +68,42 @@ const AddDonationForm = () => {
   const isCustomCategory = selectedCategory === "__custom__";
 
   useEffect(() => {
-    const fetchAllCategoriesAndDistricts = async () => {
-      try {
-        const categories = await getAllCategory();
-        const districts = await getAllDistrict();
-        const userId = await getUserId();
-      
-        setCategoryList(categories);
-        setDistrictList(districts);
-        setCreatedBy(userId);
-      } catch (error) {
-        alert("Failed to fetch categories: " + error);
+  const fetchAllCategoriesAndDistricts = async () => {
+    try {
+      const categories = await getAllCategory();
+      const districts = await getAllDistrict();
+      const userId = await getUserId();
+
+      setCategoryList(categories);
+      setDistrictList(districts);
+      setCreatedBy(userId);
+      console.log("donation id", finalDonationId);
+      if (finalDonationId) {
+        console.log("inside fetch donation")
+        const res = await getDonationByDonationId(finalDonationId); 
+        const d = res;
+
+        setTitle(d.title);
+        setItem(d.item);
+        setQuantity(d.quantity.toString());
+        setDescription(d.description);
+        setName(d.donerName);
+        setPhone(d.donerPhone);
+        setCategory(d.category?.name || "");
+        setSelectedCategory(d.category?.name || "");
+        setMode(d.delivary);
+        setAddress(d.pickupAddress);
+        setDistrict(d.district?._id || "");
+        setImages(d.images || []);
       }
-    };
-    fetchAllCategoriesAndDistricts();
-  }, []);
+    } catch (error) {
+      alert("Failed to fetch categories or donation: " + error);
+    }
+  };
+
+  fetchAllCategoriesAndDistricts();
+}, [finalDonationId]);
+
 
   const handlePickerChange = (value: string) => {
     setSelectedCategory(value);
@@ -84,48 +119,50 @@ const AddDonationForm = () => {
   };
 
   const handleOnAddDonation = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("item", item);
-      formData.append("quantity", quantity);
-      formData.append("description", description);
-      formData.append("donerName", name);
-      formData.append("donerPhone", phone);
-      formData.append("category", category);
-      formData.append("delivary", mode);
-      formData.append("pickupAddress", address);
-      formData.append("district", district);
-      formData.append('createdBy', createdBy);
-      
-      images.forEach((uri, index) => {
-        const fileName = uri.split("/").pop() || `image_${index}.jpg`;
-        const fileExtension = fileName.split(".").pop()?.toLowerCase();
+  try {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("item", item);
+    formData.append("quantity", quantity);
+    formData.append("description", description);
+    formData.append("donerName", name);
+    formData.append("donerPhone", phone);
+    formData.append("category", category);
+    formData.append("delivary", mode);
+    formData.append("pickupAddress", address);
+    formData.append("district", district);
+    formData.append('createdBy', createdBy);
 
-        if (!allowedImageExtension.includes(fileExtension || '')) {
-          alert(`Invalid file type: ${fileExtension}`);
-          return;
-        }
+    images.forEach((uri, index) => {
+      const fileName = uri.split("/").pop() || `image_${index}.jpg`;
+      const fileExtension = fileName.split(".").pop()?.toLowerCase();
+      if (!allowedImageExtension.includes(fileExtension || '')) return;
+      formData.append("images", {
+        uri,
+        name: fileName,
+        type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
+      } as any);
+    });
 
-        formData.append("images", {
-          uri,
-          name: fileName,
-          type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
-        } as any);
-      });
-
-      const response = await createDonation(formData);
-      
-      if (response.ok) {
-        alert("Donation Created Successfullt!");
-      } else {
-        alert("Failed to create donation: " + response.message);
-      }
-    } catch (error) {
-      console.error("Error submitting donation:", error);
-      alert("Error submitting donation: " + error);
+    let response;
+    if (finalDonationId) {
+      response = await updateDonation(finalDonationId, formData);
+    } else {
+      response = await createDonation(formData);
     }
-  };
+
+    if (response.success) {
+      alert(finalDonationId ? "Donation Updated Successfully!" : "Donation Created Successfully!");
+      onSuccess && onSuccess();
+      navigate("/profile/userProfile");
+    } else {
+      alert("Failed: " + response.message);
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Error: " + error);
+  }
+};
 
   const handleOnCancel = () => {
     // Reset form or navigate

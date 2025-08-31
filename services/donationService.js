@@ -38,6 +38,16 @@ export const getDonationByDonationId = async (donationId) => {
     }
 };
 
+export const getDonationByCreatedBy = async (createdBy) => {
+    try {
+        const response = await axios.get(`${API}/api/donation/createdBy/${createdBy}`);
+        return response.data;
+    } catch (error) {
+        console.log("Fetching Donation Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
 export const filterDonation = async (filterData) => {
     try {
         const response = await axios.post(`${API}/api/donation/filter/create`, filterData);
@@ -56,6 +66,32 @@ export const getNearByDonations = async (userId) => {
         return response.data.data;
     } catch (error) {
         console.log("fetching nearby Donations Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+export const updateDonation = async (donationId, updatedDonation) => {
+    try {
+        const response = await axios.put(`${API}/api/donation/${donationId}`, updatedDonation, {
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+        console.log("response: ", response);
+        return response.data;
+    } catch (error) {
+        console.log("updating Donation Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+export const deleteDonation = async (donationId) => {
+    try {
+        const response = await axios.delete(`${API}/api/donation/${donationId}`);
+        console.log("response: ", response);
+        return response.data;
+    } catch (error) {
+        console.log("deleting Donation Failed:". error.response?.data || error);
         throw error;
     }
 }

@@ -100,15 +100,23 @@ const NeedDetail: React.FC<DetailProps> = ({
             <Text style={styles.quantity}>Quantity: {quantity}</Text>
           </View>
 
+          
           <View style={styles.buttonContainer}>
             <View style={styles.halfButton}>
               <SubmitButton
-                title="REQUEST HELP"
+                title="DONATE"
+                onPress={handleOnDonate}
+                buttonColor={COLORS.bgDark}
+              />
+              </View>
+              <View style={styles.halfButton}>
+              <SubmitButton
+                title="ADD TO WISHLIST"
                 onPress={handleOnAddToWishList}
                 buttonColor={COLORS.textHighlight}
               />
-            </View>
-          </View>
+              </View>
+              </View>
         </View>
       </ScrollView>
     </View>

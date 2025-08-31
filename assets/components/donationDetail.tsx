@@ -41,13 +41,10 @@ const donationDetail: React.FC<DetailProps> = ({
   quantity
 }) => {
 
-  const handleOnDonate = () => {
+  const handleOnRequest = () => {
     //navigate('');
   };
 
-  const handleOnAddToWishList = () => {
-    //navigate('');
-  };
 
   return (
     <View style={styles.container}>
@@ -104,15 +101,8 @@ const donationDetail: React.FC<DetailProps> = ({
           <View style={styles.buttonContainer}>
             <View style={styles.halfButton}>
               <SubmitButton
-                title="DONATE"
-                onPress={handleOnDonate}
-                buttonColor={COLORS.bgDark}
-              />
-            </View>
-            <View style={styles.halfButton}>
-              <SubmitButton
-                title="ADD TO WISHLIST"
-                onPress={handleOnAddToWishList}
+                title="REQUEST HELP"
+                onPress={handleOnRequest}
                 buttonColor={COLORS.textHighlight}
               />
             </View>

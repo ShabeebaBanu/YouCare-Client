@@ -38,6 +38,16 @@ export const getNeedByNeedId = async (needId) => {
     }
 };
 
+export const getNeedByCreatedBy = async (createdBy) => {
+    try {
+        const response = await axios.get(`${API}/api/need/createdBy/${createdBy}`);
+        return response.data;
+    } catch (error) {
+        console.log("Fetching Need with createdBy Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
 export const filterNeed = async (filterData) => {
     try {
         const response = await axios.post(`${API}/api/need/filter/create`, filterData);
@@ -56,6 +66,33 @@ export const getNearByNeeeds = async (userId) => {
         return response.data.data;
     } catch (error) {
         console.log("fetching nearby Needs Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+export const updateNeed = async (needId, updatedNeed) => {
+    try {
+        const response = await axios.put(`${API}/api/need/${needId}`, updatedNeed, {
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+        console.log("response: ", response);
+        return response.data;
+    } catch (error) {
+        console.log("updating Need Failed:". error.response?.data || error);
+        throw error;
+    }
+};
+
+
+export const deleteNeed = async (needId) => {
+    try {
+        const response = await axios.delete(`${API}/api/need/${needId}`);
+        console.log("response: ", response);
+        return response.data;
+    } catch (error) {
+        console.log("deleting Need Failed:". error.response?.data || error);
         throw error;
     }
 }

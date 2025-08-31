@@ -17,36 +17,39 @@ import * as ImagePicker from "expo-image-picker";
 
 import { getAllCategory } from "../../../services/categorService";
 import { getAllDistrict } from "../../../services/districtService";
-import { createNeed } from "../../../services/needService";
-
+import { createNeed, updateNeed, getNeedByNeedId } from "../../../services/needService";
 import { getUserId } from "@/constants/config";
+import { useLocalSearchParams } from "expo-router";
+import { navigate } from "../../../navigation/globalNavigation"
 
 const deliveryOptions = ["Yes", "No", "Request Volunteer"];
 
-type Category = {
-  _id: string;
-  name: string;
+type Category = { _id: string; name: string };
+type District = { _id: string; name: string };
+
+const allowedImageExtension = ["jpg", "jpeg", "png"];
+
+type AddNeedFormProps = {
+  needId?: string; 
+  onSuccess?: () => void;
 };
 
-type District = {
-  _id: string;
-  name: string;
-};
-
-const allowedImageExtension = ['jpg', 'jpeg', 'png'];
-
-const AddNeedForm = () => {
+const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
+  const { needId: queryNeedId } = useLocalSearchParams<{ needId?: string }>();
+  const finalNeedId = needId || queryNeedId;
 
   const [categoryList, setCategoryList] = useState<Category[]>([]);
   const [districtList, setDistrictList] = useState<District[]>([]);
+  const [isEdit, setIsEdit] = useState(false);
 
+  // form fields
   const [title, setTitle] = useState("");
   const [item, setItem] = useState("");
   const [quantity, setQuantity] = useState("");
   const [description, setDescription] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [category, setCategory] = useState(""); 
+  const [category, setCategory] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [mode, setMode] = useState("");
   const [address, setAddress] = useState("");
@@ -56,39 +59,56 @@ const AddNeedForm = () => {
 
   const isCustomCategory = selectedCategory === "__custom__";
 
-
+  // fetch categories, districts, and existing need (if editing)
   useEffect(() => {
-      const fetchAllCategoriesAndDistricts = async () => {
-        try {
-          const categories = await getAllCategory();
-          const districts = await getAllDistrict();
-          const userId = getUserId();
-        
-          setCategoryList(categories);
-          setDistrictList(districts);
-          setCreatedBy(await userId);
-        } catch (error) {
-          alert("Failed to fetch categories: " + error);
-        }
-      };
-      fetchAllCategoriesAndDistricts();
-    }, []);
+    const fetchData = async () => {
+      try {
+        const categories = await getAllCategory();
+        const districts = await getAllDistrict();
+        const userId = await getUserId();
 
-    const handlePickerChange = (value: string) => {
+        setCategoryList(categories);
+        setDistrictList(districts);
+        setCreatedBy(userId);
+        console.log("need id", finalNeedId);
+        if (finalNeedId) {
+          setIsEdit(true);
+          const existingNeed = await getNeedByNeedId(finalNeedId);
+
+          // Prefill form fields
+          setTitle(existingNeed.title || "");
+          setItem(existingNeed.item || "");
+          setQuantity(existingNeed.quantity?.toString() || "");
+          setDescription(existingNeed.description || "");
+          setName(existingNeed.needyName || "");
+          setPhone(existingNeed.needyPhone || "");
+          setCategory(existingNeed.category || "");
+          setSelectedCategory(existingNeed.category || "");
+          setMode(existingNeed.delivary || "");
+          setAddress(existingNeed.delivaryAddress || "");
+          setDistrict(existingNeed.district || "");
+          setImages(existingNeed.images || []);
+        }
+      } catch (error) {
+        alert("Failed to fetch categories or need data: " + error);
+      }
+    };
+
+    fetchData();
+  }, [finalNeedId]);
+
+  // handle category change
+  const handlePickerChange = (value: string) => {
     setSelectedCategory(value);
-    if (value !== "__custom__") {
-      setCategory(value);
-    } else {
-      setCategory(""); 
-    }
+    setCategory(value !== "__custom__" ? value : "");
   };
 
   const handleCustomCategoryInput = (text: string) => {
-    setCategory(text.toUpperCase()); 
+    setCategory(text.toUpperCase());
   };
 
-  const handleOnAddNeed = async () => {
-
+  // submit handler
+  const handleOnSubmit = async () => {
     try {
       const formData = new FormData();
       formData.append("title", title);
@@ -101,45 +121,54 @@ const AddNeedForm = () => {
       formData.append("delivary", mode);
       formData.append("delivaryAddress", address);
       formData.append("district", district);
-      formData.append('createdBy', createdBy);
+      formData.append("createdBy", createdBy);
 
+      // images
       images.forEach((uri, index) => {
-        const fileName = uri.split("/").pop() || `image_${index}.jpg`;
-        const fileExtension = fileName.split(".").pop()?.toLowerCase();
-
-        if (!allowedImageExtension.includes(fileExtension || '')) {
-          alert(`Invalid file type: ${fileExtension}`);
-          return;
+        if (uri.startsWith("http")) {
+          formData.append("existingImages", uri);
+        } else {
+          const fileName = uri.split("/").pop() || `image_${index}.jpg`;
+          const fileExtension = fileName.split(".").pop()?.toLowerCase();
+          if (!allowedImageExtension.includes(fileExtension || "")) {
+            alert(`Invalid file type: ${fileExtension}`);
+            return;
+          }
+          formData.append("images", {
+            uri,
+            name: fileName,
+            type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
+          } as any);
         }
-
-        formData.append("images", {
-          uri,
-          name: fileName,
-          type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
-        } as any);
       });
 
-      const response = await createNeed(formData);
+      let response;
+      if (isEdit && finalNeedId) {
+        response = await updateNeed(finalNeedId, formData);
+      } else {
+        response = await createNeed(formData);
+      }
 
-          if (response.ok) {
-            alert("Need Created Successfullt!");
-          } else {
-            alert("Failed to create Need: " + response.message);
-          }
+      if (response.success) {
+        alert(isEdit ? "Need Updated Successfully!" : "Need Created Successfully!");
+        onSuccess?.(); 
+        navigate("/profile/userProfile");
+      } else {
+        alert("Failed to submit Need: " + response.message);
+      }
     } catch (error) {
       console.error("Error submitting Need:", error);
       alert("Error submitting Need: " + error);
     }
   };
 
+  // pick new image
   const pickImage = async () => {
     if (images.length >= 2) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
-      base64: false,
-      exif: false
     });
     if (!result.canceled && result.assets.length > 0) {
       setImages((prev) => [...prev, result.assets[0].uri]);
@@ -153,7 +182,7 @@ const AddNeedForm = () => {
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView>
-        <Text style={styles.title}>ADD NEED</Text>
+        <Text style={styles.title}>{isEdit ? "EDIT NEED" : "ADD NEED"}</Text>
 
         <TextInput
           style={styles.input}
@@ -163,42 +192,43 @@ const AddNeedForm = () => {
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
+        {/* Item + Category */}
         <View style={styles.itemContainer}>
-            <View style={styles.halfItem}>
-              <TextInput
-                style={styles.input}
-                placeholder="Item Name"
-                placeholderTextColor={COLORS.textPlaceHolder}
-                value={item}
-                onChangeText={setItem}
-              />
-            </View>
-            <View style={styles.halfItem}>
-              <Picker
-                selectedValue={selectedCategory}
-                onValueChange={handlePickerChange}
-                style={styles.input}
-              >
-                <Picker.Item label="Select Category" value="" />
-                {categoryList.map((cat) => (
-                  <Picker.Item label={cat.name} value={cat.name} key={cat._id} />
-                ))}
-                <Picker.Item label="Other (Type your own)" value="__custom__" />
-              </Picker>
-            </View>
-          </View>
-
-          {isCustomCategory && (
+          <View style={styles.halfItem}>
             <TextInput
               style={styles.input}
-              placeholder="Enter Custom Category"
+              placeholder="Item Name"
               placeholderTextColor={COLORS.textPlaceHolder}
-              value={category}
-              onChangeText={handleCustomCategoryInput}
+              value={item}
+              onChangeText={setItem}
             />
-          )}
+          </View>
+          <View style={styles.halfItem}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={handlePickerChange}
+              style={styles.input}
+            >
+              <Picker.Item label="Select Category" value="" />
+              {categoryList.map((cat) => (
+                <Picker.Item label={cat.name} value={cat.name} key={cat._id} />
+              ))}
+              <Picker.Item label="Other (Type your own)" value="__custom__" />
+            </Picker>
+          </View>
+        </View>
 
+        {isCustomCategory && (
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Custom Category"
+            placeholderTextColor={COLORS.textPlaceHolder}
+            value={category}
+            onChangeText={handleCustomCategoryInput}
+          />
+        )}
 
+        {/* Other inputs */}
         <TextInput
           style={styles.input}
           placeholder="Description"
@@ -233,14 +263,10 @@ const AddNeedForm = () => {
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
-        <Picker
-          selectedValue={district}
-          onValueChange={setDistrict}
-          style={styles.input}
-        >
+        <Picker selectedValue={district} onValueChange={setDistrict} style={styles.input}>
           <Picker.Item label="Select District" value="" />
           {districtList.map((dist) => (
-            <Picker.Item key={dist.name} label={dist.name} value={dist._id} />
+            <Picker.Item key={dist._id} label={dist.name} value={dist._id} />
           ))}
         </Picker>
 
@@ -252,6 +278,7 @@ const AddNeedForm = () => {
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
+        {/* Delivery Options */}
         <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
           Delivery Needed
         </Text>
@@ -260,11 +287,7 @@ const AddNeedForm = () => {
             <TouchableOpacity
               key={option}
               onPress={() => setMode(option)}
-              style={{
-                marginRight: 10,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
+              style={{ marginRight: 10, flexDirection: "row", alignItems: "center" }}
             >
               <View
                 style={{
@@ -294,6 +317,7 @@ const AddNeedForm = () => {
           ))}
         </View>
 
+        {/* Images */}
         <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
           Upload up to 2 images
         </Text>
@@ -316,11 +340,12 @@ const AddNeedForm = () => {
           )}
         </View>
 
+        {/* Buttons */}
         <View style={styles.button}>
           <View style={styles.halfItem}>
             <SubmitButton
-              title="ADD NEED"
-              onPress={handleOnAddNeed}
+              title={isEdit ? "UPDATE NEED" : "ADD NEED"}
+              onPress={handleOnSubmit}
               buttonColor={COLORS.buttonOther}
             />
           </View>
@@ -338,23 +363,15 @@ const AddNeedForm = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-  },
+  container: { flex: 1, padding: 15 },
   title: {
     fontSize: SIZE.medium,
     color: COLORS.textHighlight,
     marginBottom: 30,
     textAlign: "center",
   },
-  itemContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  halfItem: {
-    width: "48%",
-  },
+  itemContainer: { flexDirection: "row", justifyContent: "space-between" },
+  halfItem: { width: "48%" },
   input: {
     borderColor: COLORS.borderSub,
     borderWidth: 1,
@@ -370,20 +387,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  imageContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginVertical: 10,
-    gap: 10,
-  },
-  imageWrapper: {
-    position: "relative",
-  },
-  image: {
-    width: 70,
-    height: 70,
-    borderRadius: SIZE.buttonRadiusSmall,
-  },
+  imageContainer: { flexDirection: "row", flexWrap: "wrap", marginVertical: 10, gap: 10 },
+  imageWrapper: { position: "relative" },
+  image: { width: 70, height: 70, borderRadius: SIZE.buttonRadiusSmall },
   removeButton: {
     position: "absolute",
     top: -6,
@@ -395,11 +401,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  removeButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
+  removeButtonText: { color: "#fff", fontWeight: "bold", fontSize: 12 },
   imageUploadBox: {
     width: 70,
     height: 70,

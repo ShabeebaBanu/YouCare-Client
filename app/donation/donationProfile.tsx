@@ -20,6 +20,7 @@ type Donation = {
   donerName?: string;
   donerPhone?: string;
   pickupAddress?: string;
+  userType?: string;
   district?: {
     _id: string;
     name: string;
@@ -74,7 +75,7 @@ export default function DonationProfile() {
         key={donation._id}
         title={donation.title}
         name={donation.donerName ?? ""}
-        type="Individual" 
+        type={donation.userType ?? ""}
         address={donation.pickupAddress ?? ""}
         phone={donation.donerPhone ?? ""}
         description={donation.description ?? ""}
