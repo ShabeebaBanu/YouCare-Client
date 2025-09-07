@@ -14,9 +14,11 @@ import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
+import CustomAlert from "@/constants/customAlert";
+import STYLES from "@/constants/common.style";
 
-import { getAllCategory } from "../../../services/categorService";
-import { getAllDistrict } from "../../../services/districtService";
+import { getAllCategory, Category } from "../../../services/categorService";
+import { getAllDistrict, District } from "../../../services/districtService";
 import { createDonation, 
          getDonationByDonationId,
          updateDonation
@@ -26,21 +28,10 @@ import { getUserId } from "@/constants/config";
 import { useLocalSearchParams } from "expo-router";
 import { navigate } from "../../../navigation/globalNavigation"
 
-type Category = {
-  _id: string;
-  name: string;
-};
-
-type District = {
-  _id: string;
-  name: string;
-};
-
 interface AddDonationFormProps {
   donationId?: string; 
   onSuccess?: () => void; 
 }
-
 
 const allowedImageExtension = ['jpg', 'jpeg', 'png'];
 
@@ -65,7 +56,17 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
   const [createdBy, setCreatedBy] = useState("");
   const [images, setImages] = useState<string[]>([]);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
   const isCustomCategory = selectedCategory === "__custom__";
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
   const fetchAllCategoriesAndDistricts = async () => {
@@ -74,12 +75,11 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
       const districts = await getAllDistrict();
       const userId = await getUserId();
 
-      setCategoryList(categories);
-      setDistrictList(districts);
+      setCategoryList(categories.data);
+      setDistrictList(districts.data);
       setCreatedBy(userId);
-      console.log("donation id", finalDonationId);
+
       if (finalDonationId) {
-        console.log("inside fetch donation")
         const res = await getDonationByDonationId(finalDonationId); 
         const d = res;
 
@@ -96,8 +96,8 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
         setDistrict(d.district?._id || "");
         setImages(d.images || []);
       }
-    } catch (error) {
-      alert("Failed to fetch categories or donation: " + error);
+    } catch (error: any) {
+      showAlert("Failed", error.message || "Failed to fetch categories or donation");
     }
   };
 
@@ -146,22 +146,21 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
 
     let response;
     if (finalDonationId) {
-      response = await updateDonation(finalDonationId, formData);
-    } else {
-      response = await createDonation(formData);
-    }
+        response = await updateDonation(finalDonationId, formData);
+      } else {
+        response = await createDonation(formData);
+      }
 
-    if (response.success) {
-      alert(finalDonationId ? "Donation Updated Successfully!" : "Donation Created Successfully!");
-      onSuccess && onSuccess();
-      navigate("/profile/userProfile");
-    } else {
-      alert("Failed: " + response.message);
+      if (response.success) {
+        showAlert("Success", finalDonationId ? response.message || "Donation Updated Successfully!" : response.message || "Donation Created Successfully!");
+        onSuccess && onSuccess();
+        navigate("/profile/userProfile");
+      } else {
+        showAlert("Failed", response.message || "Something went wrong");
+      }
+    } catch (error: any) {
+      showAlert("Error", error.message || "Unexpected error occurred");
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("Error: " + error);
-  }
 };
 
   const handleOnCancel = () => {
@@ -193,10 +192,10 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView>
-        <Text style={styles.title}>ADD DONATION</Text>
+        <Text style={STYLES.formTitle}>ADD DONATION</Text>
         <View>
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Title Your Donation"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={title}
@@ -206,7 +205,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           <View style={styles.itemContainer}>
             <View style={styles.halfItem}>
               <TextInput
-                style={styles.input}
+                style={STYLES.input}
                 placeholder="Item Name"
                 placeholderTextColor={COLORS.textPlaceHolder}
                 value={item}
@@ -217,7 +216,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
               <Picker
                 selectedValue={selectedCategory}
                 onValueChange={handlePickerChange}
-                style={styles.input}
+                style={STYLES.input}
               >
                 <Picker.Item label="Select Category" value="" />
                 {categoryList.map((cat) => (
@@ -230,7 +229,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
 
           {isCustomCategory && (
             <TextInput
-              style={styles.input}
+              style={STYLES.input}
               placeholder="Enter Custom Category"
               placeholderTextColor={COLORS.textPlaceHolder}
               value={category}
@@ -239,7 +238,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           )}
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Description"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={description}
@@ -249,7 +248,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           />
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Quantity"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={quantity}
@@ -257,7 +256,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           />
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Provider Name"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={name}
@@ -265,7 +264,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           />
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Provider Phone"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={phone}
@@ -275,7 +274,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           <Picker
             selectedValue={district}
             onValueChange={setDistrict}
-            style={styles.input}
+            style={STYLES.input}
           >
             <Picker.Item label="Select District" value="" />
             {districtList.map((dist) => (
@@ -284,7 +283,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           </Picker>
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Pickup Address"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={address}
@@ -293,7 +292,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
 
           <Text style={styles.radioLabel}>Delivery Provided</Text>
           <View style={styles.radioGroup}>
-            {["Yes", "No", " Request Volunteer"].map((option) => (
+            {["Yes", "No"].map((option) => (
               <TouchableOpacity
                 key={option}
                 style={styles.radioOption}
@@ -346,6 +345,12 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           />
         </View>
       </View>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -356,27 +361,12 @@ const styles = StyleSheet.create({
     padding: 15,
     justifyContent: "flex-start",
   },
-  title: {
-    fontSize: SIZE.medium,
-    color: COLORS.textHighlight,
-    marginBottom: 30,
-    textAlign: "center",
-  },
   itemContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   halfItem: {
     width: "48%",
-  },
-  input: {
-    borderColor: COLORS.borderSub,
-    borderWidth: 1,
-    borderRadius: SIZE.buttonRadiusSmall,
-    marginBottom: 10,
-    paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
-    backgroundColor: COLORS.white,
   },
   button: {
     marginTop: 20,
@@ -410,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   removeButtonText: {
-    color: "#fff",
+    color: COLORS.white,
     fontWeight: "bold",
     fontSize: 12,
   },
@@ -424,26 +414,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: COLORS.white,
   },
-
   radioLabel: {
   marginTop: 10,
   marginBottom: 5,
   color: COLORS.textPlaceHolder,
   },
-
   radioGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 10,
     gap: 10,
   },
-
   radioOption: {
     flexDirection: "row",
     alignItems: "center",
     marginRight: 15,
   },
-
   radioCircle: {
     height: 18,
     width: 18,
@@ -454,14 +440,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 6,
   },
-
   radioDot: {
     height: 8,
     width: 8,
     borderRadius: 4,
     backgroundColor: COLORS.textHighlight,
   },
-
   radioText: {
     fontSize: 14,
     color: COLORS.textDark,

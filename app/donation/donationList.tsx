@@ -1,40 +1,13 @@
 import { View, StyleSheet, ActivityIndicator, FlatList, Text} from 'react-native'
-import COLORS from '../../constants/colors'
+import STYLES from '@/constants/common.style'
 import Header  from '../../assets/components/header'
 import Footer from '../../assets/components/footer'
 import CardMedium from '../../assets/components/cardMedium'
 import FilterTab from '../../assets/components/filterTab'
-import { getAllDonation } from '../../services/donationService'
+import { getAllDonation, Donation } from '../../services/donationService'
 import { useEffect, useState } from 'react'
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
-
-type Donation = {
-  _id: string;
-  title: string;
-  item?: string;
-  description?: string;
-  status?: string;
-  quantity?: number;
-  category?: {
-    _id: string;
-    name: string;
-  };
-  donerName?: string;
-  donerPhone?: string;
-  pickupAddress?: string;
-  district?: {
-    _id: string;
-    name: string;
-    province: string;
-  };
-  userType: string;
-  delivary?: string;
-  createdBy?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 
 export default function DonationList() {
   const { donations } = useLocalSearchParams();
@@ -58,12 +31,10 @@ export default function DonationList() {
         setError(null);
         try {
           const response = await getAllDonation();
-          console.log("donations: ", response);
-          const needs: Donation[] = Array.isArray(response) ? response : response.data ?? [];
-          setDonationList(needs);
-        } catch (err: any) {
-          console.error("Failed to fetch Donations:", err);
-          setError(err?.message || "Failed to load Donations");
+          const responseData: Donation[] = Array.isArray(response) ? response : response.data ?? [];
+          setDonationList(responseData);
+        } catch (error: any) {
+          setError(error?.message || "Failed to load Donations");
         } finally {
           setLoading(false);
         }
@@ -95,7 +66,7 @@ export default function DonationList() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <Header/>
       <FilterTab
         title='Doners'
@@ -111,7 +82,7 @@ export default function DonationList() {
               keyExtractor={(item) => item._id}
               renderItem={renderItem}
               showsVerticalScrollIndicator={false}
-              ListEmptyComponent={<Text>No Donations found</Text>}
+              ListEmptyComponent={<Text style={STYLES.emptyMessage} >No Donations found</Text>}
             />
         )}
       </View>
@@ -121,11 +92,6 @@ export default function DonationList() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: COLORS.white
-    },
-   
     body: {
       flex: 1,
       padding: 10,

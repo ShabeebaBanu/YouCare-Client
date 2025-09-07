@@ -3,6 +3,7 @@ import { setAccessToken, clearAccessToken, config } from '../constants/config';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from "jwt-decode";
 import { Platform } from 'react-native';
+import { handleApiError } from "./ErrorResponse/errorResponse";
 
 const CLIENT_ID = config.KEYCLOAK_CLIENT;
 const CLIENT_SECRET = config.KEYCLOAK_CLIENT_SECRET;
@@ -10,7 +11,7 @@ const KEYCLOAK_URL = config.KEYCLOAK_URL;
 
 const TOKEN_KEY = "access_token";
 
-export const loginWithKeycloak = async (username, password) => {
+export const loginWithKeycloak = async (username: any, password: any) => {
     const data = new URLSearchParams();
     data.append("grant_type", "password");
     data.append("client_id", CLIENT_ID);
@@ -27,12 +28,11 @@ export const loginWithKeycloak = async (username, password) => {
         });
         return response;
     } catch (error) {
-        console.error("Login Failed : ", error.response?.data || error);
-        throw error;
+        handleApiError(error, "User Creation");
     }
 }
 
-export const saveToken = async (token) => {
+export const saveToken = async (token: any) => {
     try {
         if (Platform.OS === 'web') {
             localStorage.setItem(TOKEN_KEY, token);
@@ -45,8 +45,7 @@ export const saveToken = async (token) => {
 
         return token;
     } catch (error) {
-        console.log("Failed to save :", error.message);
-        alert('Failed to save token:', error);
+        handleApiError(error, "Save Token");
     }
 }
 
@@ -70,8 +69,7 @@ export const loadToken = async () => {
             return null;
         }
     } catch (error) {
-        alert('Failed to load token:', error.message);
-        return null;
+        handleApiError(error, "Load Token");
     }
 }
 
@@ -84,6 +82,6 @@ export const clearToken = async () => {
         }
         clearAccessToken();
     } catch (error) {
-        alert('Failed to clear token:', error);
+        handleApiError(error, "Clear token");
     }
 }

@@ -13,21 +13,10 @@ import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import { useRouter } from "expo-router";
 import { USER_TYPES } from "../../../constants/data";
-import { getAllDistrict } from "@/services/districtService";
-import { getAllCategory } from "@/services/categorService";
+import { getAllDistrict, District } from "@/services/districtService";
+import { getAllCategory, Category } from "@/services/categorService";
 import { filterNeed } from "../../../services/needService";
 import { filterDonation } from "@/services/donationService";
-
-type District = {
-  _id: string;
-  name: string;
-  province: string;
-};
-
-type Category = {
-  _id: string;
-  name: string;
-};
 
 interface FilterFormProp {
   section: string;

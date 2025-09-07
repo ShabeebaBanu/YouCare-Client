@@ -9,7 +9,7 @@ const COLORS = {
     textPlaceHolder: "#B9C2CB",
     textHighlight: "#CB7701",
     textOption: "#3E80B2",
-    textgray: "#4C555E",
+    textgray: "#373b3eff",
 
     buttonAccept: "#13A132",
     buttonReject: "#cf3630ff",

@@ -1,5 +1,5 @@
 import { View, Image } from "react-native";
-import styles from "../assets/styles/welcome.style"
+import styles from "../constants/common.style"
 import CustomButton from "@/assets/components/customButtonBig";
 import { useRouter } from "expo-router";
 

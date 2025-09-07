@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   TouchableOpacity,
   Text,
@@ -10,11 +10,12 @@ import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import CustomButtonSmall from "./customButtonSmall";
 import { getUserId } from "@/constants/config";
-import { createWishList,
-         deleteWishlistById
- } from "@/services/wishlistService";
+import {
+  createWishList,
+  deleteWishlistById,
+} from "@/services/wishlistService";
 import { createDonationRequest } from "@/services/donationRequestService";
-
+import CustomAlert from "@/constants/customAlert";
 
 interface CardMediumProps {
   usage: string;
@@ -41,53 +42,59 @@ const CardMedium: React.FC<CardMediumProps> = ({
   createdBy,
   district,
   date,
-  onAddToWishList,
   onPress,
-  buttonTitle
+  buttonTitle,
 }) => {
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertConfirm, setAlertConfirm] = useState<(() => void) | undefined>(undefined);
+
+  const showAlert = (
+    title: string,
+    message: string,
+    confirmAction?: () => void
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertConfirm(() => confirmAction); 
+    setAlertVisible(true);
+  };
 
   const handleButtonPress = async () => {
     const userId = await getUserId();
 
     try {
       if (usage === "WISHLIST") {
-        // Remove from wishlist or view wishlist details
-        console.log("Wishlist button pressed for:", id);
-        // TODO: call your remove or view wishlist API
-        alert("Wishlist button clicked");
-      } 
-      else if (usage === "NEED") {
+        showAlert("Wishlist", "Wishlist button clicked");
+      } else if (usage === "NEED") {
         const payload = {
           userId: userId,
           needCreatedBy: createdBy,
           needId: id,
         };
         const response = await createWishList(payload);
-        console.log("Wishlist API Response:", response);
-        alert("Wishlist created");
-      } 
-      else if (usage === "DONATION") {
+        showAlert("Success", response.message || "Wishlist created successfully");
+      } else if (usage === "DONATION") {
         const payload = {
           userId: userId,
-          donerCreatedBy: createdBy,
+          donationCreatedBy: createdBy,
           donationId: id,
         };
         const response = await createDonationRequest(payload);
-        console.log("Donation Request API Response:", response);
-        alert("Donation Request Sent");
+        showAlert("Success", response.message || "Donation Request Sent");
       }
-    } catch (error) {
-      console.error(`Error handling ${usage} creation :`, error);
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Something went wrong, Please try again.");
     }
   };
 
   const handleRemoveWishlist = async () => {
     try {
-      const response = await deleteWishlistById(id); 
-      console.log("Removed wishlist:", response);
-      alert("Wishlist item removed");
-    } catch (err) {
-      console.error("Error removing wishlist:", err);
+      const response = await deleteWishlistById(id);
+      showAlert("Removed", response.message || "Wishlist Item Removed Successfully");
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Failed to remove wishlist");
     }
   };
 
@@ -96,43 +103,57 @@ const CardMedium: React.FC<CardMediumProps> = ({
   };
 
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={handleOnNeed}>
-    
-      <Image source={imageUrl} style={styles.image} resizeMode="cover" />
+    <>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.9}
+        onPress={handleOnNeed}
+      >
+        <Image source={imageUrl} style={styles.image} resizeMode="cover" />
 
-      <View style={styles.description}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.userType}>{userType}</Text>
-      </View>
-
-      <View style={[styles.details, usage === "WISHLIST" && styles.detailsRow]}>
-      <Text style={styles.district}>{district}</Text>
-      <Text style={styles.date}>{date}</Text>
-
-  {usage === "WISHLIST" ? (
-        <View style={styles.buttonRow}>
-          <CustomButtonSmall
-            title=" X "
-            onPress={handleRemoveWishlist}
-            buttonColor={COLORS.textgray}
-          />
-          <CustomButtonSmall
-            title={buttonTitle}
-            onPress={handleButtonPress}
-            buttonColor={COLORS.buttonOdd}
-          />
+        <View style={styles.description}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.userType}>{userType}</Text>
         </View>
-      ) : (
-        <CustomButtonSmall
-          title={buttonTitle}
-          onPress={handleButtonPress}
-          buttonColor={COLORS.buttonOdd}
-        />
-      )}
-    </View>
 
-    </TouchableOpacity>
+        <View
+          style={[styles.details, usage === "WISHLIST" && styles.detailsRow]}
+        >
+          <Text style={styles.district}>{district}</Text>
+          <Text style={styles.date}>{date}</Text>
+
+          {usage === "WISHLIST" ? (
+            <View style={styles.buttonRow}>
+              <CustomButtonSmall
+                title=" X "
+                onPress={handleRemoveWishlist}
+                buttonColor={COLORS.textgray}
+              />
+              <CustomButtonSmall
+                title={buttonTitle}
+                onPress={handleButtonPress}
+                buttonColor={COLORS.buttonOdd}
+              />
+            </View>
+          ) : (
+            <CustomButtonSmall
+              title={buttonTitle}
+              onPress={handleButtonPress}
+              buttonColor={COLORS.buttonOdd}
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        onConfirm={alertConfirm}
+      />
+    </>
   );
 };
 
@@ -145,12 +166,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor:COLORS.bgGray,
-    // elevation: 3,
-    // shadowColor: COLORS.bgDark,
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.4,
-    // shadowRadius: 2,
+    borderColor: COLORS.bgGray,
     alignItems: "center",
     padding: 10,
   },
@@ -183,15 +199,13 @@ const styles = StyleSheet.create({
     height: 60,
     marginLeft: 10,
   },
-
   detailsRow: {
     alignItems: "flex-end",
   },
-
   buttonRow: {
     flexDirection: "row",
-    gap: 6, 
-    marginTop: 5
+    gap: 6,
+    marginTop: 5,
   },
   district: {
     fontSize: SIZE.small,

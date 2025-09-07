@@ -13,16 +13,12 @@ import SubmitButton from "../submitButton";
 import { navigate } from "../../../navigation/globalNavigation";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
+import STYLES from "@/constants/common.style";
 import { USER_TYPES } from "../../../constants/data";
 import { createUser } from "@/services/userService";
-import { getAllDistrict } from "@/services/districtService";
+import { getAllDistrict, District } from "@/services/districtService";
 import { useLocalSearchParams } from "expo-router";
-
-type District = {
-  _id: string;
-  name: string;
-  province: string;
-};
+import CustomAlert from "@/constants/customAlert";
 
 const SignUpForm = () => {
   const { email } = useLocalSearchParams();
@@ -36,13 +32,25 @@ const SignUpForm = () => {
   const [userType, setUserType] = useState(USER_TYPES[0]);
   const [districtList, setDistrictList] = useState<District[]>([]);
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [onAlertConfirm, setOnAlertConfirm] = useState<() => void>(() => () => {});
+
+  const showAlert = (title: string, message: string, onConfirm?: () => void) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setOnAlertConfirm(() => onConfirm || (() => setAlertVisible(false)));
+    setAlertVisible(true);
+  };
+
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const districts = await getAllDistrict();
-        setDistrictList(districts);
-      } catch (error) {
-        alert("Failed to fetch Districts: " + error);
+        setDistrictList(districts.data);
+      } catch (error: any) {
+        showAlert("Error", error.message || "Failed to fetch districts");
       }
     };
     fetchDistricts();
@@ -64,24 +72,18 @@ const SignUpForm = () => {
         payload.organizationAddress = organizationAddress;
       }
 
-      console.log("Payload:", payload);
-
       const response = await createUser(payload);
 
       if (response.success) {
-        alert("Success, Account created successfully");
-        navigate("/home/home");
+        showAlert("Success", response.message || "Account created successfully", () =>
+          navigate("/home/home")
+        );
       } else {
-        alert("Error " + (response.message || "Failed to create user"));
+        showAlert("Error", response.message || "Failed to create user");
       }
     } catch (error: any) {
-      if (error.response) {
-        alert("Error " + (error.response.data.message || "Server error"));
-      } else {
-        alert("Error " + (error.message || "Unexpected error"));
-      }
+        showAlert("Error", error.message || "Unexpected error");
     }
-    navigate("/auth/login");
   };
 
   const handleDistrictChange = (selectedDistrict: string) => {
@@ -103,23 +105,23 @@ const SignUpForm = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>CREATE ACCOUNT</Text>
+        <Text style={STYLES.formTitle}>CREATE ACCOUNT</Text>
 
         <View>
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Name"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={name}
             onChangeText={setName}
           />
 
-          <View style={styles.input}>
+          <View style={STYLES.input}>
             <Text style={styles.fixedText}>{email ? email : "Email"}</Text>
           </View>
 
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Password"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={password}
@@ -130,25 +132,24 @@ const SignUpForm = () => {
           <Picker
             selectedValue={userType}
             onValueChange={setUserType}
-            style={styles.input}
+            style={STYLES.input}
           >
             {USER_TYPES.map((type) => (
               <Picker.Item label={type} value={type} key={type} />
             ))}
           </Picker>
 
-          {/* Conditional fields for Organization */}
           {userType === "organization" && (
             <>
               <TextInput
-                style={styles.input}
+                style={STYLES.input}
                 placeholder="Organization Name"
                 placeholderTextColor={COLORS.textPlaceHolder}
                 value={organizationName}
                 onChangeText={setOrganizationName}
               />
               <TextInput
-                style={styles.input}
+                style={STYLES.input}
                 placeholder="Organization Address"
                 placeholderTextColor={COLORS.textPlaceHolder}
                 value={organizationAddress}
@@ -160,7 +161,7 @@ const SignUpForm = () => {
           <Picker
             selectedValue={district}
             onValueChange={handleDistrictChange}
-            style={styles.input}
+            style={STYLES.input}
           >
             <Picker.Item label="Select District" value="" />
             {districtList.map((dist) => (
@@ -168,7 +169,7 @@ const SignUpForm = () => {
             ))}
           </Picker>
 
-          <View style={styles.input}>
+          <View style={STYLES.input}>
             <Text style={styles.fixedText}>
               {province ? province : "Province"}
             </Text>
@@ -183,6 +184,15 @@ const SignUpForm = () => {
           />
         </View>
       </ScrollView>
+
+     
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        onConfirm={onAlertConfirm}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -195,21 +205,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-  },
-  title: {
-    fontSize: SIZE.medium,
-    color: COLORS.textDark,
-    marginBottom: 30,
-    textAlign: "center",
-  },
-  input: {
-    borderColor: COLORS.borderSub,
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderRadius: SIZE.buttonRadiusSmall,
-    marginBottom: 15,
-    paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
   },
   fixedText: {
     color: COLORS.textPlaceHolder,

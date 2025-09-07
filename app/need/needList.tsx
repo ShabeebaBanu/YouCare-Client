@@ -1,39 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, FlatList, ActivityIndicator, Text } from "react-native";
 import COLORS from '../../constants/colors';
+import STYLES from "@/constants/common.style";
 import Header from '../../assets/components/header';
 import Footer from '../../assets/components/footer';
 import CardMedium from '../../assets/components/cardMedium';
 import FilterTab from '../../assets/components/filterTab';
-import { getAllNeed } from '../../services/needService';
+import { getAllNeed, Need } from '../../services/needService';
 import { useRouter } from "expo-router";
 import { useLocalSearchParams } from "expo-router";
-
-type Need = {
-  _id: string;
-  title: string;
-  item?: string;
-  description?: string;
-  status?: string;
-  quantity?: number;
-  category?: {
-    _id: string;
-    name: string;
-  };
-  needyName?: string;
-  needyPhone?: string;
-  delivaryAddress?: string;
-  district?: {
-    _id: string;
-    name: string;
-    province: string;
-  };
-  userType: string;
-  delivary?: string;
-  createdBy?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+import CustomAlert from "@/constants/customAlert";
 
 const NeedList = () => {
   const { needs } = useLocalSearchParams();
@@ -42,6 +18,10 @@ const NeedList = () => {
   const [needList, setNeedList] = useState<Need[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
     if (needs) {
@@ -55,11 +35,19 @@ const NeedList = () => {
       const fetchAllNeeds = async () => {
         setLoading(true);
         try {
-          const response = await getAllNeed();
-          const allNeeds: Need[] = Array.isArray(response) ? response : response.data ?? [];
-          setNeedList(allNeeds);
-        } catch (err) {
-          console.error("Failed to fetch Needs:", err);
+        const response = await getAllNeed();
+        const allNeeds: Need[] = Array.isArray(response) ? response : response.data ?? [];
+        setNeedList(allNeeds);
+
+        if (allNeeds.length === 0) {
+          setAlertTitle("No Needs Found");
+          setAlertMessage("Currently there are no needs available.");
+          setAlertVisible(true);
+        }
+        } catch (error: any) {
+          setAlertTitle("Error");
+          setAlertMessage(error?.message || "Failed to load needs. Please try again later.");
+          setAlertVisible(true);
         } finally {
           setLoading(false);
         }
@@ -90,21 +78,26 @@ const NeedList = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <Header />
       <FilterTab title="Needies" />
       <View style={styles.body}>
         {loading ? (
           <ActivityIndicator size="large" />
-        ) : error ? (
-          <Text style={{ color: "red" }}>{error}</Text>
         ) : (
           <FlatList
             data={needList}
             keyExtractor={(item) => item._id}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={<Text>No needs found</Text>}
+            ListEmptyComponent={
+              <CustomAlert
+                visible={true}
+                title="No Needs Found"
+                message="Currently there are no needs available."
+                onClose={() => setAlertVisible(false)}
+              />
+            }
           />
         )}
       </View>
@@ -114,10 +107,6 @@ const NeedList = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-  },
   body: {
     flex: 1,
     padding: 10,

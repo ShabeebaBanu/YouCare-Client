@@ -24,7 +24,7 @@ export default function UserProfile() {
       try {
         const userId = await getUserId();
         const response = await getUserById(userId);
-        setUser(response);
+        setUser(response.data);
       } catch (err: any) {
         console.error(err);
         alert(err?.message || "Failed to load user");
@@ -41,10 +41,10 @@ export default function UserProfile() {
         let response: any = [];
         if (activeTab === "Donation") {
           const res = await getDonationByCreatedBy(user.id);
-          response = res.data || [];
+          response = res.data;
         } else if (activeTab === "Need") {
           const res = await getNeedByCreatedBy(user.id);
-          response = res.data || [];
+          response = res.data;
         } else {
           response = [];
         }
@@ -99,6 +99,10 @@ export default function UserProfile() {
   }
   };
 
+  const handleOnRequests = (id: string) => {
+    router.push(`/donation/requestList?donationId=${id}`)
+  };
+
 
   if (!user) return null;
 
@@ -129,6 +133,8 @@ export default function UserProfile() {
             onView={() => handleOnView(activeTab, item._id)}
             onEdit={() => handleOnEdit(activeTab, item._id)}
             onDelete={() => handleDeletePress(activeTab, item._id)}
+            activeTab={activeTab}
+            onRequests={() => handleOnRequests(item._id)}
           />
         ))}
       </ScrollView>

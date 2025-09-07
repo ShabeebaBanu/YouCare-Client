@@ -3,120 +3,123 @@ import { KeyboardAvoidingView, TextInput, ActivityIndicator, Text, StyleSheet, V
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { loginWithKeycloak } from "../../../services/authService";
+import STYLES from "@/constants/common.style";
+import { loginWithKeycloak, saveToken } from "../../../services/authService";
 import { navigate } from "../../../navigation/globalNavigation";
-import { isPasswordValid } from '../../../util/validation'
-import { saveToken } from "../../../services/authService";
+import { isPasswordValid } from "../../../util/validation";
+import CustomAlert from "@/constants/customAlert";
 
 const LoginForm = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleOnLogin = async () => {
-        if (!username.trim() || !password.trim()) {
-            setError('Username and password are required.');
-            return;
-        }
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
-        // const passwordValidationMessage = isPasswordValid(password);
-        // if (passwordValidationMessage) {
-        //     setError(passwordValidationMessage);
-        //     return;
-        // }
+  const handleOnLogin = async () => {
+    if (!username.trim() || !password.trim()) {
+      setAlertTitle("Error");
+      setAlertMessage("Username and password are required.");
+      setAlertVisible(true);
+      return;
+    }
 
-        setIsLoading(true);
-        setError('');
-        try {
-            const responseData = await loginWithKeycloak(username, password);
-            const token = responseData.data.access_token;
-            await saveToken(token);
-            navigate('/home/home');
-        } catch (err) {
-            console.error("Login Error : ", err);
-            setError('Invalid Username or password. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const passwordValidationMessage = isPasswordValid(password);
+    if (passwordValidationMessage) {
+      setAlertTitle("Error");
+      setAlertMessage(passwordValidationMessage);
+      setAlertVisible(true);
+      return;
+    }
 
-    return (
-        <KeyboardAvoidingView style={styles.container}>
-            <Text style={styles.title}>LOGIN</Text>
+    setIsLoading(true);
+    try {
+      const responseData = await loginWithKeycloak(username, password);
+      if (!responseData) {
+        setAlertTitle("Error");
+        setAlertMessage("Login Failed");
+        setAlertVisible(true);
+        return;
+      }
+      const token = responseData.data.access_token;
+      await saveToken(token);
 
-            <View>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Username"
-                    placeholderTextColor={COLORS.textPlaceHolder}
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                />
+      setAlertTitle("Success");
+      setAlertMessage("Login successful!");
+      setAlertVisible(true);
+    } catch (error: any) {
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    placeholderTextColor={COLORS.textPlaceHolder}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
-            </View>
+      setAlertTitle("Error");
+      setAlertMessage(error.message || "Invalid Username or password. Please try again.");
+      setAlertVisible(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+  return (
+    <KeyboardAvoidingView style={styles.container}>
+      <Text style={STYLES.formTitle}>LOGIN</Text>
 
-            <View style={styles.loginButton}>
-                {isLoading ? (
-                    <ActivityIndicator size="large" color={COLORS.buttonOther} />
-                ) : (
-                    <SubmitButton
-                        title="LOGIN"
-                        onPress={handleOnLogin}
-                        buttonColor={COLORS.buttonOther}
-                    />
-                )}
-            </View>
-        </KeyboardAvoidingView>
-    );
+      <View>
+        <TextInput
+          style={STYLES.input}
+          placeholder="Username"
+          placeholderTextColor={COLORS.textPlaceHolder}
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+
+        <TextInput
+          style={STYLES.input}
+          placeholder="Password"
+          placeholderTextColor={COLORS.textPlaceHolder}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+      </View>
+
+      <View style={styles.loginButton}>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={COLORS.buttonOther} />
+        ) : (
+          <SubmitButton
+            title="LOGIN"
+            onPress={handleOnLogin}
+            buttonColor={COLORS.buttonOther}
+          />
+        )}
+      </View>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => {
+          setAlertVisible(false);
+          if (alertTitle === "Success") {
+            navigate("/home/home"); 
+          }
+        }}
+      />
+    </KeyboardAvoidingView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        justifyContent: 'flex-start',
-    },
-    title: {
-        fontSize: SIZE.medium,
-        color: COLORS.textDark,
-        marginBottom: 30,
-        textAlign: 'center',
-    },
-    input: {
-        borderColor: COLORS.borderSub,
-        borderWidth: 1,
-        borderRadius: SIZE.buttonRadiusSmall,
-        marginBottom: 15,
-        paddingVertical: SIZE.VerticlePaddingSmall,
-        paddingHorizontal: SIZE.HorizontalPaddingSmall,
-    },
-    loginButton: {
-        marginTop: 20,
-        marginBottom: 20,
-    },
-    errorText: {
-        color: COLORS.errorText,
-        backgroundColor: COLORS.errorBg,
-        textAlign: 'center',
-        fontSize: SIZE.small,
-        padding: 3,
-        borderWidth: 1,
-        borderColor: COLORS.errorText,
-        marginTop: 10,
-        borderRadius: SIZE.buttonRadiusSmall
-    },
+  container: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "flex-start",
+  },
+  loginButton: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
 });
 
 export default LoginForm;

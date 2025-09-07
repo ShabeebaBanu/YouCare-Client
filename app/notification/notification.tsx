@@ -33,7 +33,7 @@ function notification() {
   const fetchData = async (tab: 'Wishlist' | 'Donation-Request' | 'Volunteer', id: string) => {
     setLoading(true);
     try {
-      let res: any[] = [];
+      let res: any;
       if (tab === 'Wishlist') {
         res = await getWishlistByUserId(id);
         console.log("Res :", res);
@@ -43,7 +43,7 @@ function notification() {
       } else {
         //res = await getVolunteerData();
       }
-      setData(res || []);
+      setData(res.data);
     } catch (err) {
       console.error('Error fetching data:', err);
       setData([]);
@@ -54,8 +54,15 @@ function notification() {
 
   const handleOnNeedSelect = (needId: string) => {
     router.push(`/need/needProfile?id=${needId}`);
-  };
+  }; 
 
+  const handleOnReceiveRequestSelect = (userId: string, donationId: string) => {
+    router.push({
+      pathname: "/need/publicProfile",
+      params: { userId, donationId }
+    });
+    // router.push(`/need/publicProfile?userId=${userId}&donationId=${donationId}`);
+  }; 
 
   return (
     <View style={styles.container}>
@@ -120,7 +127,7 @@ function notification() {
                   title={item.donationId?.title ?? " "}
                   name={item.name}
                   date={dayjs(item.createdAt).format("MMMM D, YYYY h:mm A")}
-                  onPress={() => console.log('selected', item._id)}
+                  onPress={() => handleOnReceiveRequestSelect(item.userId, item.donationId._id)}
                 />
               )
             }

@@ -40,9 +40,9 @@ const Footer = () => {
       case "need":
         navigate("/need/addNeed");
         break;
-      case "volunteer":
-        navigate("/volunteer/register");
-        break;
+      // case "volunteer":
+      //   navigate("/volunteer/register");
+      //   break;
       default:
         break;
     }
@@ -88,12 +88,12 @@ const Footer = () => {
                 <Text style={styles.optionText}>Need</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.optionButton}
                 onPress={() => handleOptionSelect("volunteer")}
               >
                 <Text style={styles.optionText}>Volunteer</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </TouchableWithoutFeedback>

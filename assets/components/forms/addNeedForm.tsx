@@ -12,25 +12,23 @@ import {
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
+import STYLES from "@/constants/common.style";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
 
-import { getAllCategory } from "../../../services/categorService";
-import { getAllDistrict } from "../../../services/districtService";
+import { getAllCategory, Category } from "../../../services/categorService";
+import { getAllDistrict, District } from "../../../services/districtService";
 import { createNeed, updateNeed, getNeedByNeedId } from "../../../services/needService";
 import { getUserId } from "@/constants/config";
 import { useLocalSearchParams } from "expo-router";
-import { navigate } from "../../../navigation/globalNavigation"
+import { navigate } from "../../../navigation/globalNavigation";
+import CustomAlert from "@/constants/customAlert";
 
-const deliveryOptions = ["Yes", "No", "Request Volunteer"];
-
-type Category = { _id: string; name: string };
-type District = { _id: string; name: string };
-
+const deliveryOptions = ["Yes", "No"];
 const allowedImageExtension = ["jpg", "jpeg", "png"];
 
 type AddNeedFormProps = {
-  needId?: string; 
+  needId?: string;
   onSuccess?: () => void;
 };
 
@@ -57,9 +55,19 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
   const [district, setDistrict] = useState("");
   const [createdBy, setCreatedBy] = useState("");
 
+  // custom alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
   const isCustomCategory = selectedCategory === "__custom__";
 
-  // fetch categories, districts, and existing need (if editing)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,15 +75,14 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
         const districts = await getAllDistrict();
         const userId = await getUserId();
 
-        setCategoryList(categories);
-        setDistrictList(districts);
+        setCategoryList(categories.data);
+        setDistrictList(districts.data);
         setCreatedBy(userId);
-        console.log("need id", finalNeedId);
+
         if (finalNeedId) {
           setIsEdit(true);
           const existingNeed = await getNeedByNeedId(finalNeedId);
 
-          // Prefill form fields
           setTitle(existingNeed.title || "");
           setItem(existingNeed.item || "");
           setQuantity(existingNeed.quantity?.toString() || "");
@@ -89,15 +96,14 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           setDistrict(existingNeed.district || "");
           setImages(existingNeed.images || []);
         }
-      } catch (error) {
-        alert("Failed to fetch categories or need data: " + error);
+      } catch (error: any) {
+        showAlert("Error", error?.message || "Failed to fetch categories or need data");
       }
     };
 
     fetchData();
   }, [finalNeedId]);
 
-  // handle category change
   const handlePickerChange = (value: string) => {
     setSelectedCategory(value);
     setCategory(value !== "__custom__" ? value : "");
@@ -107,7 +113,6 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
     setCategory(text.toUpperCase());
   };
 
-  // submit handler
   const handleOnSubmit = async () => {
     try {
       const formData = new FormData();
@@ -123,7 +128,6 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
       formData.append("district", district);
       formData.append("createdBy", createdBy);
 
-      // images
       images.forEach((uri, index) => {
         if (uri.startsWith("http")) {
           formData.append("existingImages", uri);
@@ -131,7 +135,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           const fileName = uri.split("/").pop() || `image_${index}.jpg`;
           const fileExtension = fileName.split(".").pop()?.toLowerCase();
           if (!allowedImageExtension.includes(fileExtension || "")) {
-            alert(`Invalid file type: ${fileExtension}`);
+            showAlert("Invalid File", `Invalid file type: ${fileExtension}`);
             return;
           }
           formData.append("images", {
@@ -150,19 +154,17 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
       }
 
       if (response.success) {
-        alert(isEdit ? "Need Updated Successfully!" : "Need Created Successfully!");
-        onSuccess?.(); 
+        showAlert("Success", isEdit ? response.message || "Need Updated Successfully!" : response.message || "Need Created Successfully!");
+        onSuccess?.();
         navigate("/profile/userProfile");
       } else {
-        alert("Failed to submit Need: " + response.message);
+        showAlert("Failed", response.message || "Failed to submit Need");
       }
-    } catch (error) {
-      console.error("Error submitting Need:", error);
-      alert("Error submitting Need: " + error);
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Error submitting Need");
     }
   };
 
-  // pick new image
   const pickImage = async () => {
     if (images.length >= 2) return;
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -179,24 +181,24 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
     setImages((prev) => prev.filter((img) => img !== uri));
   };
 
+
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView>
-        <Text style={styles.title}>{isEdit ? "EDIT NEED" : "ADD NEED"}</Text>
+        <Text style={STYLES.formTitle}>{isEdit ? "EDIT NEED" : "ADD NEED"}</Text>
 
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Title Your Need"
           value={title}
           onChangeText={setTitle}
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
-        {/* Item + Category */}
         <View style={styles.itemContainer}>
           <View style={styles.halfItem}>
             <TextInput
-              style={styles.input}
+              style={STYLES.input}
               placeholder="Item Name"
               placeholderTextColor={COLORS.textPlaceHolder}
               value={item}
@@ -207,7 +209,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
             <Picker
               selectedValue={selectedCategory}
               onValueChange={handlePickerChange}
-              style={styles.input}
+              style={STYLES.input}
             >
               <Picker.Item label="Select Category" value="" />
               {categoryList.map((cat) => (
@@ -220,7 +222,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
 
         {isCustomCategory && (
           <TextInput
-            style={styles.input}
+            style={STYLES.input}
             placeholder="Enter Custom Category"
             placeholderTextColor={COLORS.textPlaceHolder}
             value={category}
@@ -228,9 +230,8 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           />
         )}
 
-        {/* Other inputs */}
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Description"
           value={description}
           onChangeText={setDescription}
@@ -240,7 +241,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
         />
 
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Quantity"
           value={quantity}
           onChangeText={setQuantity}
@@ -248,7 +249,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
         />
 
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Requester Name"
           value={name}
           onChangeText={setName}
@@ -256,14 +257,14 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
         />
 
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Requester Phone"
           value={phone}
           onChangeText={setPhone}
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
-        <Picker selectedValue={district} onValueChange={setDistrict} style={styles.input}>
+        <Picker selectedValue={district} onValueChange={setDistrict} style={STYLES.input}>
           <Picker.Item label="Select District" value="" />
           {districtList.map((dist) => (
             <Picker.Item key={dist._id} label={dist.name} value={dist._id} />
@@ -271,14 +272,13 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
         </Picker>
 
         <TextInput
-          style={styles.input}
+          style={STYLES.input}
           placeholder="Delivery Address"
           value={address}
           onChangeText={setAddress}
           placeholderTextColor={COLORS.textPlaceHolder}
         />
 
-        {/* Delivery Options */}
         <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
           Delivery Needed
         </Text>
@@ -317,7 +317,6 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           ))}
         </View>
 
-        {/* Images */}
         <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
           Upload up to 2 images
         </Text>
@@ -340,7 +339,6 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           )}
         </View>
 
-        {/* Buttons */}
         <View style={styles.button}>
           <View style={styles.halfItem}>
             <SubmitButton
@@ -358,28 +356,27 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           </View>
         </View>
       </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15 },
-  title: {
-    fontSize: SIZE.medium,
-    color: COLORS.textHighlight,
-    marginBottom: 30,
-    textAlign: "center",
+  container: { 
+    flex: 1, 
+    padding: 15 
   },
-  itemContainer: { flexDirection: "row", justifyContent: "space-between" },
-  halfItem: { width: "48%" },
-  input: {
-    borderColor: COLORS.borderSub,
-    borderWidth: 1,
-    borderRadius: SIZE.buttonRadiusSmall,
-    marginBottom: 10,
-    paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
-    backgroundColor: COLORS.white,
+  itemContainer: { 
+    flexDirection: "row", 
+    justifyContent: "space-between" 
+  },
+  halfItem: { 
+    width: "48%" 
   },
   button: {
     marginTop: 20,
@@ -387,9 +384,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  imageContainer: { flexDirection: "row", flexWrap: "wrap", marginVertical: 10, gap: 10 },
-  imageWrapper: { position: "relative" },
-  image: { width: 70, height: 70, borderRadius: SIZE.buttonRadiusSmall },
+  imageContainer: { 
+    flexDirection: "row", 
+    flexWrap: "wrap", 
+    marginVertical: 10, 
+    gap: 10 
+  },
+  imageWrapper: { 
+    position: "relative" 
+  },
+  image: { 
+    width: 70, 
+    height: 70, 
+    borderRadius: SIZE.buttonRadiusSmall 
+  },
   removeButton: {
     position: "absolute",
     top: -6,
@@ -401,7 +409,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  removeButtonText: { color: "#fff", fontWeight: "bold", fontSize: 12 },
+  removeButtonText: { 
+    color: "#fff", 
+    fontWeight: "bold", 
+    fontSize: 12 
+  },
   imageUploadBox: {
     width: 70,
     height: 70,

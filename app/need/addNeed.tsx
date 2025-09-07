@@ -1,5 +1,5 @@
-import { View, StyleSheet, Image, TouchableOpacity, Text} from 'react-native'
-import COLORS from '../../constants/colors'
+import { View, StyleSheet} from 'react-native'
+import STYLES from '@/constants/common.style'
 import Header  from '../../assets/components/header'
 import Footer from '../../assets/components/footer'
 import AddNeedForm from '../../assets/components/forms/addNeedForm'
@@ -7,7 +7,7 @@ import AddNeedForm from '../../assets/components/forms/addNeedForm'
 export default function AddNeed() {
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <Header/>
       <View style={styles.body}>
          <AddNeedForm></AddNeedForm>
@@ -18,11 +18,6 @@ export default function AddNeed() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: COLORS.white
-    },
-   
     body: {
       flex: 1,
       padding: 10,

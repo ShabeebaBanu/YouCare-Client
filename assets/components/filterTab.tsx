@@ -147,7 +147,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: SIZE.medium,
-    fontWeight: "bold",
     color: COLORS.textHighlight,
     marginBottom: 5,
   },

@@ -9,7 +9,7 @@ type HeaderProfileProps = {
   onTabPress?: (tab: string) => void;
 };
 
-const TABS = ["Personal", "Donation", "Need", "Volunteer"];
+const TABS = ["Personal", "Donation", "Need"];
 
 const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPress }) => {
   const [activeTab, setActiveTab] = useState("Personal");

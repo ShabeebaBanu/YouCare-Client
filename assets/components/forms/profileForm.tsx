@@ -10,15 +10,9 @@ import { Picker } from "@react-native-picker/picker";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { getAllDistrict } from "@/services/districtService";
+import { getAllDistrict, District } from "@/services/districtService";
 import { updateUserById, resetPassword } from "@/services/userService";
 import { getUserId } from "@/constants/config";
-
-interface District {
-  _id: string;
-  name: string;
-  province: string;
-}
 
 interface ProfileFormProps {
   initialData: {

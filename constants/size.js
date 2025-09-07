@@ -1,7 +1,7 @@
 const SIZE = {
     mini: 10,
     small: 13,
-    medium: 18,
+    medium: 15,
     average: 25,
     large: 40,
     iconSize: 26,

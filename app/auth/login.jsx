@@ -1,6 +1,7 @@
 import { View, StyleSheet, Image, TouchableOpacity, Text} from 'react-native'
 import React from 'react'
 import COLORS from '@/constants/colors'
+import STYLES from '@/constants/common.style'
 import SIZE from '@/constants/size'
 import LoginForm from '@/assets/components/forms/loginForm'
 import { useRouter } from "expo-router";
@@ -9,10 +10,10 @@ export default function Login() {
   const navigation = useRouter();
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <View style={styles.logoContainer}>
          <Image 
-          style={ styles.logo}
+          style={ STYLES.logo}
           source= {require('../../assets/images/LogoLight.png')}
         />
       </View>
@@ -31,19 +32,10 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: COLORS.bgLight
-    },
     logoContainer: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    logo: {
-      width: 120,
-      height: 120,
-      marginBottom: 10
     },
     formContainer: {
       flex: 2,
