@@ -57,30 +57,21 @@ const CardMedium: React.FC<CardMediumProps> = ({
   ) => {
     setAlertTitle(title);
     setAlertMessage(message);
-    setAlertConfirm(() => confirmAction); 
+    setAlertConfirm(() => confirmAction);
     setAlertVisible(true);
   };
 
   const handleButtonPress = async () => {
     const userId = await getUserId();
-
     try {
       if (usage === "WISHLIST") {
         showAlert("Wishlist", "Wishlist button clicked");
       } else if (usage === "NEED") {
-        const payload = {
-          userId: userId,
-          needCreatedBy: createdBy,
-          needId: id,
-        };
+        const payload = { userId, needCreatedBy: createdBy, needId: id };
         const response = await createWishList(payload);
         showAlert("Success", response.message || "Wishlist created successfully");
       } else if (usage === "DONATION") {
-        const payload = {
-          userId: userId,
-          donationCreatedBy: createdBy,
-          donationId: id,
-        };
+        const payload = { userId, donationCreatedBy: createdBy, donationId: id };
         const response = await createDonationRequest(payload);
         showAlert("Success", response.message || "Donation Request Sent");
       }
@@ -111,38 +102,33 @@ const CardMedium: React.FC<CardMediumProps> = ({
       >
         <Image source={imageUrl} style={styles.image} resizeMode="cover" />
 
-        <View style={styles.description}>
+        <View style={styles.rightContent}>
+  
           <Text style={styles.title}>{title}</Text>
+
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.userType}>{userType}</Text>
-        </View>
 
-        <View
-          style={[styles.details, usage === "WISHLIST" && styles.detailsRow]}
-        >
-          <Text style={styles.district}>{district}</Text>
-          <Text style={styles.date}>{date}</Text>
+          <View style={styles.bottomRow}>
+            <View style={styles.infoLeft}>
+              <Text style={styles.date}>{date}</Text>
+              <Text style={styles.district}>{district}</Text>
+            </View>
 
-          {usage === "WISHLIST" ? (
-            <View style={styles.buttonRow}>
-              <CustomButtonSmall
-                title=" X "
-                onPress={handleRemoveWishlist}
-                buttonColor={COLORS.textgray}
-              />
+            <View style={styles.buttonContainer}>
+              {usage === "WISHLIST" && (
+                <CustomButtonSmall
+                  title=" X "
+                  onPress={handleRemoveWishlist}
+                  buttonColor={COLORS.textgray}
+                />
+              )}
               <CustomButtonSmall
                 title={buttonTitle}
                 onPress={handleButtonPress}
                 buttonColor={COLORS.buttonOdd}
               />
             </View>
-          ) : (
-            <CustomButtonSmall
-              title={buttonTitle}
-              onPress={handleButtonPress}
-              buttonColor={COLORS.buttonOdd}
-            />
-          )}
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -160,60 +146,64 @@ const CardMedium: React.FC<CardMediumProps> = ({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: SIZE.buttonRadiusSmall,
+    borderRadius: 16,
     backgroundColor: COLORS.bgLight,
-    marginVertical: 10,
-    marginHorizontal: 5,
+    marginVertical: 8,
+    marginHorizontal: 6,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: COLORS.bgGray,
-    alignItems: "center",
-    padding: 10,
+    padding: 12,
+    position: "relative",
+    alignItems: "flex-start",
+    shadowColor: "#000", 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 4, 
+    elevation: 3,
   },
   image: {
-    width: 60,
-    height: 60,
-    borderRadius: SIZE.buttonRadiusSmall,
-    marginRight: 10,
+    width: 70,
+    height: 70,
+    borderRadius: 12,
+    marginRight: 12,
   },
-  description: {
+  rightContent: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   title: {
-    fontSize: SIZE.medium,
-    fontWeight: "bold",
+    fontSize: SIZE.small + 2,
+    fontWeight: "700",
     color: COLORS.textDark,
+    marginBottom: 2,
   },
   name: {
-    fontSize: SIZE.small,
+    fontSize: SIZE.mini + 1,
     color: COLORS.textDark,
+    marginBottom: 4,
   },
-  userType: {
-    fontSize: SIZE.mini,
-    color: COLORS.textLight,
-  },
-  details: {
-    justifyContent: "flex-start",
-    alignItems: "flex-end",
-    height: 60,
-    marginLeft: 10,
-  },
-  detailsRow: {
-    alignItems: "flex-end",
-  },
-  buttonRow: {
+  bottomRow: {
     flexDirection: "row",
-    gap: 6,
-    marginTop: 5,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
   },
-  district: {
-    fontSize: SIZE.small,
-    color: COLORS.textOption,
+  infoLeft: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
   },
   date: {
     fontSize: SIZE.mini,
-    color: COLORS.textHighlight,
+    color: COLORS.textPlaceHolder,
+  },
+  district: {
+    fontSize: SIZE.mini,
+    color: COLORS.textOption,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 6,
   },
 });
 

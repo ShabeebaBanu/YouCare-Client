@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
+import { LinearGradient } from "expo-linear-gradient";
 
 type HeaderProfileProps = {
   name: string;
@@ -28,41 +29,70 @@ const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPres
 
   return (
     <View style={styles.container}>
-      {/* Profile Circle */}
-      <View style={[styles.circle, { backgroundColor: bgColor }]}>
-        <Text style={styles.circleText}>{name.charAt(0).toUpperCase()}</Text>
-      </View>
+      <LinearGradient
+        colors={["#3a506b", COLORS.bgDark, "#1a1a1a"]} 
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.containerGradient}
+      >
 
-      <Text style={styles.name}>{name}</Text>
-      <Text style={styles.userType}>{userType}</Text>
+        <View
+          style={[
+            styles.circle,
+            {
+              backgroundColor: bgColor,
+              shadowColor: "#000",
+              shadowOpacity: 0.2,
+              shadowRadius: 6,
+              shadowOffset: { width: 0, height: 4 },
+            },
+          ]}
+        >
+          <Text style={styles.circleText}>{name.charAt(0).toUpperCase()}</Text>
+        </View>
 
-      <View style={styles.tabContainer}>
-        {TABS.map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => handleTabPress(tab)}
-          >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
-              {tab}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.userType}>{userType}</Text>
+
+        <View style={styles.tabContainer}>
+          {TABS.map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[
+                styles.tab,
+                {
+                  backgroundColor:
+                    activeTab === tab ? COLORS.buttonOther : "rgba(255,255,255,0.15)",
+                },
+              ]}
+              onPress={() => handleTabPress(tab)}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab && styles.activeTabText,
+                ]}
+              >
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </LinearGradient>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    margin: 10,
     alignItems: "center",
-    paddingVertical: SIZE.VerticlePaddingMedium,
-    backgroundColor: COLORS.white,
-    shadowColor: COLORS.bgDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 3,
+  },
+  containerGradient: {
+    width: "100%",
+    alignItems: "center",
+    paddingVertical: SIZE.VerticlePaddingMedium + 4,
+     borderRadius: 10
   },
   circle: {
     width: 90,
@@ -70,7 +100,7 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   circleText: {
     fontSize: SIZE.large,
@@ -78,39 +108,35 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   name: {
-    fontSize: SIZE.medium,
-    fontWeight: "bold",
-    color: COLORS.textDark,
+    fontSize: SIZE.medium + 2,
+    fontWeight: "700",
+    color: COLORS.white,
     marginTop: 4,
   },
   userType: {
     fontSize: SIZE.small,
-    color: COLORS.textPlaceHolder,
-    marginBottom: 20,
+    color: "rgba(255,255,255,0.8)",
+    marginBottom: 18,
   },
   tabContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     width: "90%",
-    backgroundColor: COLORS.white,
-    padding: 2,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
   tab: {
     paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
-    borderRadius: 8,
-  },
-  activeTab: {
-    backgroundColor: COLORS.buttonOther,
-    borderRadius: SIZE.buttonRadiusSmall,
+    paddingHorizontal: SIZE.HorizontalPaddingSmall + 6,
+    borderRadius: 16,
   },
   tabText: {
-    fontSize: SIZE.small,
-    color: COLORS.textDark,
+    fontSize: SIZE.small - 1,
+    color: COLORS.white,
+    fontWeight: "500",
   },
   activeTabText: {
-    color: COLORS.white,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });
 

@@ -24,17 +24,16 @@ const CardPublic: React.FC<CardSmallProps> = ({
   imageUrl,
   onView,
 }) => {
-  // pick style based on status
   const getStatusStyle = () => {
     switch (status) {
       case "PENDING":
-        return { backgroundColor: COLORS.textHighlight }; // orange/yellow
+        return { backgroundColor: COLORS.textHighlight };
       case "AVAILABLE":
-        return { backgroundColor: COLORS.bgDark }; // dark color
+        return { backgroundColor: COLORS.bgDark };
       case "COMPLETED":
-        return { backgroundColor: COLORS.textgray }; // gray for completed
+        return { backgroundColor: COLORS.textgray };
       default:
-        return { backgroundColor: COLORS.textgray }; // fallback
+        return { backgroundColor: COLORS.textgray };
     }
   };
 
@@ -51,7 +50,10 @@ const CardPublic: React.FC<CardSmallProps> = ({
         <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
 
         <View style={styles.rightSection}>
-          <Text style={[styles.title, isCompleted && styles.disabledText]} numberOfLines={1}>
+          <Text
+            style={[styles.title, isCompleted && styles.disabledText]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
           <View style={styles.rowSpace}>
@@ -59,7 +61,6 @@ const CardPublic: React.FC<CardSmallProps> = ({
               {updatedAt}
             </Text>
 
-            {/* Always show pill with respective style */}
             <View style={[styles.statusBox, getStatusStyle()]}>
               <Text
                 style={[
@@ -79,23 +80,21 @@ const CardPublic: React.FC<CardSmallProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: 15,
     backgroundColor: COLORS.white,
-    marginVertical: 5,
-    marginHorizontal: 5,
+    marginVertical: 2,
+    marginHorizontal: 2,
     padding: 8,
 
-    // Shadow for iOS
+    // soft floating effect
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
     shadowRadius: 6,
-
-    // Elevation for Android
-    elevation: 3,
+    elevation: 4,
   },
   disabledCard: {
-    opacity: 0.7, // slightly faded look
+    opacity: 0.6,
   },
   row: {
     flexDirection: "row",
@@ -105,43 +104,50 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 2,
   },
   image: {
-    width: 65,
-    height: 65,
+    width: 55,
+    height: 55,
     borderRadius: 14,
-    marginRight: 12,
+    marginRight: 10,
+    borderWidth: 1.5,
+    borderColor: COLORS.bgDark,
   },
   rightSection: {
     flex: 1,
     justifyContent: "center",
   },
   title: {
-    fontSize: SIZE.medium,
-    fontWeight: "600",
+    fontSize: SIZE.small,
+    fontWeight: "500",
     color: COLORS.textDark,
-    marginBottom: 6,
+    marginBottom: 4,
+    letterSpacing: 0.3,
   },
   date: {
     fontSize: SIZE.mini,
     color: COLORS.textHighlight,
+    opacity: 0.8,
   },
   disabledText: {
     color: COLORS.textPlaceHolder,
   },
   statusBox: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 16,
+    alignSelf: "flex-start",
   },
   statusText: {
     fontSize: SIZE.mini,
     color: COLORS.white,
-    fontWeight: "500",
+    fontWeight: "400",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   disabledStatusText: {
-    color: COLORS.white, // keep text white on gray background
+    color: COLORS.white,
   },
 });
 

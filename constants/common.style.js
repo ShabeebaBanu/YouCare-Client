@@ -5,7 +5,8 @@ import SIZE from "./size";
 const styles = StyleSheet.create({
     container : {
         flex: 1,
-        backgroundColor: COLORS.bgLight
+        backgroundColor: COLORS.white,
+        padding: 4
     },
     topRow : {
         flex: 2,
@@ -27,13 +28,15 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     input: {
-        borderColor: COLORS.borderSub,
         backgroundColor: COLORS.white,
-        borderWidth: 1,
         borderRadius: SIZE.buttonRadiusSmall,
-        marginBottom: 15,
         paddingVertical: SIZE.VerticlePaddingSmall,
         paddingHorizontal: SIZE.HorizontalPaddingSmall,
+        marginBottom: 15,
+        borderWidth: 1,
+        borderColor: COLORS.borderSub,
+        fontSize: SIZE.small,
+        color: COLORS.textDark,
     },
     formTitle: {
         fontSize: SIZE.medium,

@@ -58,17 +58,20 @@ const CardSmall: React.FC<CardSmallProps> = ({
         onPress={() => !isCompleted && setShowActions((prev) => !prev)}
         disabled={isCompleted}
       >
+        {/* Left: Tiny Image */}
         <Image
           source={{ uri: imageUrl }}
           style={[styles.image, isCompleted && styles.completedImage]}
           resizeMode="cover"
         />
 
+        {/* Right: Content */}
         <View style={styles.rightSection}>
           <Text style={[styles.title, isCompleted && styles.completedText]}>
             {title}
           </Text>
-          <View style={styles.rowSpace}>
+
+          <View style={styles.metaRow}>
             <Text style={[styles.date, isCompleted && styles.completedText]}>
               {updatedAt}
             </Text>
@@ -84,23 +87,24 @@ const CardSmall: React.FC<CardSmallProps> = ({
         </View>
       </TouchableOpacity>
 
+      {/* Action Buttons */}
       {!isCompleted && showActions && (
         <View style={styles.actions}>
           {activeTab === "Donation" && (
             <TouchableOpacity style={styles.textBox} onPress={onRequests}>
-              <Text style={styles.textButton}>View Requests</Text>
+              <Text style={styles.textButton}>Requests</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.textBox} onPress={onView}>
-            <Text style={styles.textButton}>View Post</Text>
+            <Text style={styles.textButton}>View</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.iconBox} onPress={onEdit}>
-            <MaterialIcons name="edit" size={22} color={COLORS.buttonOther} />
+            <MaterialIcons name="edit" size={18} color={COLORS.buttonOther} />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.iconBox} onPress={onDelete}>
-            <MaterialIcons name="delete" size={22} color={COLORS.buttonReject} />
+            <MaterialIcons name="delete" size={18} color={COLORS.buttonReject} />
           </TouchableOpacity>
         </View>
       )}
@@ -110,66 +114,66 @@ const CardSmall: React.FC<CardSmallProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 10,
     backgroundColor: COLORS.white,
-    marginVertical: 8,
-    marginHorizontal: 6,
-    padding: 7,
+    marginVertical: 6,
+    marginHorizontal: 8,
+    padding: 8,
 
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
 
     borderWidth: 1,
     borderColor: COLORS.bgGray,
   },
   completedCard: {
-    borderWidth: 0, // no border
-    backgroundColor: "#f5f5f5", // soft gray background
-    shadowOpacity: 0.03, // lighter shadow
-    elevation: 1,
+    borderWidth: 0,
+    backgroundColor: "#f7f7f7",
+    shadowOpacity: 0.01,
+    elevation: 0,
   },
   completedText: {
     color: COLORS.textgray,
   },
   completedImage: {
-    opacity: 0.6, // desaturate look
+    opacity: 0.6,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
   },
-  rowSpace: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   image: {
-    width: 65,
-    height: 65,
-    borderRadius: 14,
-    marginRight: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 10,
+    marginRight: 10,
   },
   rightSection: {
     flex: 1,
     justifyContent: "center",
   },
   title: {
-    fontSize: SIZE.medium,
+    fontSize: SIZE.small,
     fontWeight: "600",
     color: COLORS.textDark,
-    marginBottom: 6,
+    marginBottom: 4,
+  },
+  metaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   date: {
     fontSize: SIZE.mini,
     color: COLORS.textHighlight,
   },
   statusBox: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 10,
   },
   statusText: {
     fontSize: SIZE.mini,
@@ -179,36 +183,27 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    marginTop: 12,
-    gap: 14,
+    marginTop: 8,
+    gap: 10,
   },
   iconBox: {
     borderWidth: 1,
     borderColor: COLORS.bgGray,
-    borderRadius: 10,
-    padding: 8,
+    borderRadius: 8,
+    padding: 6,
     backgroundColor: COLORS.white,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   textBox: {
     borderWidth: 1,
     borderColor: COLORS.bgGray,
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+    borderRadius: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
     backgroundColor: COLORS.white,
-    // elevation: 2,
-    // shadowColor: "#000",
-    // shadowOpacity: 0.1,
-    // shadowRadius: 4,
-    // shadowOffset: { width: 0, height: 2 },
   },
   textButton: {
-    fontSize: SIZE.small,
+    fontSize: SIZE.mini,
     fontWeight: "600",
     color: COLORS.textDark,
   },

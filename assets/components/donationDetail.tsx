@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import COLORS from '../../constants/colors';
+import STYLES from '@/constants/common.style';
 import SIZE from '../../constants/size';
 import SubmitButton from './submitButton';
 import { FontAwesome } from '@expo/vector-icons';
@@ -47,7 +48,7 @@ const donationDetail: React.FC<DetailProps> = ({
 
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <View>
         <FlatList
           data={dummyData.images}
@@ -118,10 +119,6 @@ export default donationDetail;
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.white,
-  },
   scrollContent: {
     flex: 1,
   },

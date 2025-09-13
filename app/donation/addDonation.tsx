@@ -8,7 +8,6 @@ export default function AddDonation() {
 
   return (
     <View style={STYLES.container}>
-      <Header/>
       <View style={styles.body}>
          <AddDonationForm></AddDonationForm>
       </View>

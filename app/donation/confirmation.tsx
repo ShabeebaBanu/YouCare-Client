@@ -78,9 +78,9 @@ const Confirmation: React.FC = () => {
   }
 
   return (
-    <View style={STYLES.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-       
+  <View style={STYLES.container}>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.reportBox}>
         <Text style={styles.pageTitle}>Donation Confirmation</Text>
         <Text style={styles.subTitle}>
           Please review the details below before confirming.
@@ -143,18 +143,19 @@ const Confirmation: React.FC = () => {
           onPress={handleConfirm}
           buttonColor={COLORS.bgDark}
         />
-      </ScrollView>
+      </View>
+    </ScrollView>
 
-      <Footer />
+    <Footer />
 
-      <CustomAlert
-        visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        onClose={() => setAlertVisible(false)}
-      />
-    </View>
-  );
+    <CustomAlert
+      visible={alertVisible}
+      title={alertTitle}
+      message={alertMessage}
+      onClose={() => setAlertVisible(false)}
+    />
+  </View>
+);
 };
 
 export default Confirmation;
@@ -162,19 +163,36 @@ export default Confirmation;
 const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 30,
+    paddingHorizontal: 12,
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  reportBox: {
+    width: "90%",
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.textPlaceHolder,
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2, 
+  },
   pageTitle: {
-    fontSize: SIZE.average,
-    fontWeight: "bold",
+    fontSize: SIZE.medium,
+    fontWeight: "700",
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 6,
     color: COLORS.textDark,
+    textTransform: "uppercase",
   },
   subTitle: {
     fontSize: SIZE.small,
@@ -185,31 +203,34 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.textgray,
+    borderBottomColor: COLORS.textPlaceHolder,
     paddingBottom: 12,
   },
   sectionHeader: {
-    fontSize: SIZE.medium,
+    fontSize: SIZE.small,
     fontWeight: "600",
-    marginBottom: 8,
-    paddingVertical: 4,
-    color: COLORS.textDark,
-    backgroundColor: COLORS.bgLight,
-    paddingHorizontal: 6,
-    borderRadius: 4,
+    marginBottom: 10,
+    color: COLORS.bgDark,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.bgDark,
+    paddingBottom: 4,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 6,
+    marginBottom: 8,
   },
   label: {
-    fontSize: SIZE.small,
+    flex: 1,
+    fontSize: SIZE.mini,
     color: COLORS.textgray,
+    fontWeight: "500",
   },
   value: {
-    fontSize: SIZE.small,
-    fontWeight: "500",
+    flex: 1,
+    fontSize: SIZE.mini,
     color: COLORS.textDark,
+    fontWeight: "600",
+    textAlign: "right",
   },
 });

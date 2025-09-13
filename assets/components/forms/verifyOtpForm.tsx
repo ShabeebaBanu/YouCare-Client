@@ -9,9 +9,10 @@ import {
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { navigate } from "../../../navigation/globalNavigation";
+import STYLES from "@/constants/common.style";
 import { sendOtp, verifyOtp } from "@/services/userService";
 import { useRouter } from "expo-router";
+import CustomAlert from "@/constants/customAlert"; 
 
 interface VerifyEmailProp {
   email: string;
@@ -21,8 +22,18 @@ const VerifyOtpForm: React.FC<VerifyEmailProp> = ({ email }) => {
   const router = useRouter();
 
   const [otp, setOtp] = useState(["", "", "", ""]);
-  const [timeLeft, setTimeLeft] = useState(0); // store seconds remaining
+  const [timeLeft, setTimeLeft] = useState(0);
   const inputRefs = useRef<TextInput[]>([]);
+
+  // Alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
 
   // countdown logic
   useEffect(() => {
@@ -35,11 +46,9 @@ const VerifyOtpForm: React.FC<VerifyEmailProp> = ({ email }) => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  // start timer when screen loads (if OTP is already sent)
   useEffect(() => {
     setTimeLeft(300); // start 5 min countdown immediately
   }, []);
-
 
   const handleChange = (index: number, value: string) => {
     if (!/^\d?$/.test(value)) return;
@@ -62,33 +71,31 @@ const VerifyOtpForm: React.FC<VerifyEmailProp> = ({ email }) => {
     const enteredOtp = otp.join("");
     try {
       const response = await verifyOtp(email, enteredOtp);
-      // if (!response.status) {
-      //   alert("Failed to Verify OTP: " + response.message);
-      //   return;
-      // }
-      alert("OTP Verified: " + response.message);
+      if (!response.success) {
+        showAlert("Error", response.message || "Failed to Verify OTP");
+        return;
+      }
+      showAlert("Success", response.message || "OTP Verified ");
       router.push(`/auth/signup?email=${email}`);
     } catch (error: any) {
-      alert("Error Verfying OTP: " + error.response?.data?.message);
+      showAlert("Error", error?.message || "Error Verifying OTP ");
     }
   };
 
-  const handleOnResentOtp = async () => {
+  const handleOnResendOtp = async () => {
     try {
       const response = await sendOtp(email);
-      // if (!response.status) {
-      //   alert("Failed to send OTP: " + response.message);
-      // }
-      alert("OTP Sent: " + response.message);
+      if (!response.success) {
+        showAlert("Error", response.message || "Failed to send OTP ");
+        return;
+      }
+      showAlert("Success", response.message || "OTP Sent ");
       setTimeLeft(300);
-      return;
-      
     } catch (error: any) {
-      alert("Error Sending OTP: " + error.response?.data?.message);
+      showAlert("Error", error?.message || "Error Sending OTP ");
     }
   };
 
-  // format mm:ss
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -97,7 +104,7 @@ const VerifyOtpForm: React.FC<VerifyEmailProp> = ({ email }) => {
 
   return (
     <KeyboardAvoidingView style={styles.container}>
-      <Text style={styles.title}>
+      <Text style={STYLES.formTitle}>
         ENTER 4 DIGIT OTP SENT TO{" "}
         <Text style={styles.emailText}>{email}</Text>
       </Text>
@@ -132,18 +139,25 @@ const VerifyOtpForm: React.FC<VerifyEmailProp> = ({ email }) => {
       <View style={styles.sendOtpButton}>
         <SubmitButton
           title="Resend OTP"
-          onPress={handleOnResentOtp}
+          onPress={handleOnResendOtp}
           buttonColor={COLORS.white}
         />
       </View>
 
       <View>
-      {timeLeft > 0 ? (
-        <Text style={styles.timer}>Resend available in {formatTime(timeLeft)}</Text>
-      ) : (
-        <Text style={styles.timer}>You can request a new OTP</Text>
-      )}
-    </View>
+        {timeLeft > 0 ? (
+          <Text style={styles.timer}>Resend available in {formatTime(timeLeft)}</Text>
+        ) : (
+          <Text style={styles.timer}>You can request a new OTP</Text>
+        )}
+      </View>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -153,12 +167,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
     justifyContent: "flex-start",
-  },
-  title: {
-    fontSize: SIZE.medium,
-    color: COLORS.textDark,
-    marginBottom: 30,
-    textAlign: "center",
   },
   otpContainer: {
     flexDirection: "row",

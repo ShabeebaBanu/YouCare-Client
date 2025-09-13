@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  View,
-} from "react-native";
+import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 
@@ -16,23 +11,17 @@ interface CardMiniProps {
   onView: () => void;
 }
 
-const CardMini: React.FC<CardMiniProps> = ({
-  name,
-  userType,
-  district,
-  date,
-  onView,
-}) => {
+const CardMini: React.FC<CardMiniProps> = ({ name, userType, district, date, onView }) => {
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={onView}>
-  
+    <TouchableOpacity style={styles.card} activeOpacity={0.8} onPress={onView}>
+      {/* Avatar */}
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>
           {name?.charAt(0).toUpperCase() || "U"}
         </Text>
       </View>
 
-
+      {/* Info */}
       <View style={styles.rightSection}>
         <Text style={styles.title} numberOfLines={1}>
           {name}
@@ -52,45 +41,44 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    marginVertical: 6,
-    marginHorizontal: 10,
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-
-    // shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginHorizontal: 6,
+    borderBottomWidth: 0.8,
+    borderBottomColor: COLORS.bgGray,
+    backgroundColor: COLORS.bgLight,
   },
   avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: COLORS.textHighlight,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#D9D9D9", 
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
   avatarText: {
-    color: COLORS.white,
-    fontSize: SIZE.medium,
-    fontWeight: "bold",
+    color: COLORS.textDark,
+    fontSize: SIZE.small,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
   rightSection: {
     flex: 1,
+    justifyContent: "center",
   },
   title: {
-    fontSize: SIZE.medium,
+    fontSize: SIZE.small,
     fontWeight: "600",
     color: COLORS.textDark,
+    marginBottom: 2,
+    letterSpacing: 0.2,
   },
   userType: {
-    fontSize: SIZE.small,
+    fontSize: SIZE.mini,
     color: COLORS.textPlaceHolder,
     marginBottom: 4,
+    letterSpacing: 0.2,
   },
   rowSpace: {
     flexDirection: "row",
@@ -98,12 +86,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   district: {
-    fontSize: SIZE.small,
+    fontSize: SIZE.mini,
     color: COLORS.textHighlight,
+    letterSpacing: 0.1,
   },
   date: {
-    fontSize: SIZE.small,
+    fontSize: SIZE.mini,
     color: COLORS.textPlaceHolder,
+    letterSpacing: 0.1,
   },
 });
 

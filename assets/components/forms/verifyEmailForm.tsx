@@ -1,87 +1,89 @@
-import React, { useState } from "react"
-import { KeyboardAvoidingView, TextInput } from "react-native";
-import { Text, StyleSheet , View} from "react-native";
-
+import React, { useState } from "react";
+import { KeyboardAvoidingView, TextInput, StyleSheet, View, Text } from "react-native";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
-import { sendOtp } from '../../../services/userService'
+import STYLES from "@/constants/common.style";
+import { sendOtp } from '../../../services/userService';
 import { useRouter } from "expo-router";
+import CustomAlert from "@/constants/customAlert"; 
 
 const VerifyEmailForm = () => {
-    const router = useRouter();
+  const router = useRouter();
 
-    const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('');
 
-    const handleOnSendOtp = async () => {
-       try {
-        console.log("inside otp method")
-        const response = await sendOtp(email);
-        console.log("response otp: ", response)
-        if (!response.success) {
-           alert("Failed to sent OTP: " + response.message);
-           return;
-        }
-        alert("OTP Sent: " + response.message);
-        router.push(`/verifyEmail/verifyOTP?email=${email}`);
+  // Alert states
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
-       } catch (error:any) {
-        alert("Error Sending OTP: " + error.response.data.message);
-       }   
-    };
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
 
-    return(
-      <KeyboardAvoidingView style={styles.container}>
-          <Text style={styles.title}>
-              VERIFY YOUR Email
-          </Text>
-          <View>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    placeholderTextColor={COLORS.textPlaceHolder}
-                    value={email}
-                    onChangeText={setEmail}
-                />
-           </View>
+  const handleOnSendOtp = async () => {
+    try {
+      const response = await sendOtp(email);
 
-           <View style={styles.sendOtpButton}>
-                <SubmitButton
-                    title="SEND OTP"
-                    onPress={handleOnSendOtp}
-                    buttonColor={COLORS.buttonOther}
-                />
-           </View>
-      </KeyboardAvoidingView>
-    )
+      if (!response.success) {
+        showAlert("Error", response.message || "Failed to send OTP ");
+        return;
+      }
+
+      showAlert("Success", response.message || "OTP Sent");
+      router.push(`/verifyEmail/verifyOTP?email=${email}`);
+
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Error Sending OTP");
+    }   
+  };
+
+  return(
+    <KeyboardAvoidingView style={styles.container}>
+      <Text style={STYLES.formTitle}>
+        VERIFY YOUR Email
+      </Text>
+      <View>
+        <TextInput
+          style={STYLES.input}
+          placeholder="Email"
+          placeholderTextColor={COLORS.textPlaceHolder}
+          value={email}
+          onChangeText={setEmail}
+        />
+      </View>
+
+      <View style={styles.sendOtpButton}>
+        <SubmitButton
+          title="SEND OTP"
+          onPress={handleOnSendOtp}
+          buttonColor={COLORS.buttonOther}
+        />
+      </View>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
+    </KeyboardAvoidingView>
+  )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 24,
-        justifyContent: 'flex-start',
-    },
-    title: {
-        fontSize: SIZE.medium,
-        color: COLORS.textDark,
-        marginBottom: 30,
-        textAlign: 'center'
-    },
-    input: {
-        borderColor: COLORS.borderSub,
-        borderWidth: 1,
-        borderRadius: SIZE.buttonRadiusSmall,
-        marginBottom: 15,
-        paddingVertical: SIZE.VerticlePaddingSmall,
-        paddingHorizontal: SIZE.HorizontalPaddingSmall,
-    },
-    sendOtpButton: {
-        marginTop: 30,
-        marginBottom: 20
-    }
-
+  container: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'flex-start',
+  },
+  sendOtpButton: {
+    marginTop: 30,
+    marginBottom: 20
+  }
 });
-
 
 export default VerifyEmailForm;

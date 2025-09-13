@@ -1,6 +1,7 @@
-import { View, StyleSheet, ScrollView, Text, Modal, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { useState, useEffect } from 'react';
 import COLORS from '../../constants/colors';
+import STYLES from '@/constants/common.style';
 import Footer from '../../assets/components/footer';
 import HeaderProfile from '../../assets/components/headerProfile';
 import ProfileForm from '../../assets/components/forms/profileForm';
@@ -10,14 +11,18 @@ import { getUserById } from "../../services/userService";
 import { getNeedByCreatedBy, deleteNeed } from '@/services/needService';
 import { getDonationByCreatedBy, deleteDonation } from '@/services/donationService';
 import { useRouter } from "expo-router";
+import CustomAlert from "../../constants/customAlert";  
 
 export default function UserProfile() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("Personal");
   const [tabData, setTabData] = useState<any[]>([]);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{id: string, type: string} | null>(null);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertConfirmAction, setAlertConfirmAction] = useState<(() => void) | undefined>();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -25,9 +30,10 @@ export default function UserProfile() {
         const userId = await getUserId();
         const response = await getUserById(userId);
         setUser(response.data);
-      } catch (err: any) {
-        console.error(err);
-        alert(err?.message || "Failed to load user");
+      } catch (error: any) {
+        setAlertTitle("Error");
+        setAlertMessage(error?.message || "Failed to load user");
+        setAlertVisible(true);
       }
     };
     fetchUser();
@@ -49,8 +55,8 @@ export default function UserProfile() {
           response = [];
         }
         setTabData(Array.isArray(response) ? response : []);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error(error);
         setTabData([]);
       }
     };
@@ -59,30 +65,34 @@ export default function UserProfile() {
   }, [activeTab, user]);
 
   const handleDeletePress = (type: string, id: string) => {
-    setItemToDelete({ type, id });
-    setDeleteModalVisible(true);
+    setAlertTitle("Confirm Delete");
+    setAlertMessage(`Are you sure you want to delete this ${type}?`);
+    setAlertConfirmAction(() => () => confirmDelete(type, id));
+    setAlertVisible(true);
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-
+  const confirmDelete = async (type: string, id: string) => {
     try {
       let response;
-      if (itemToDelete.type === "Need") response = await deleteNeed(itemToDelete.id);
-      else if (itemToDelete.type === "Donation") response = await deleteDonation(itemToDelete.id);
+      if (type === "Need") response = await deleteNeed(id);
+      else if (type === "Donation") response = await deleteDonation(id);
 
       if (response?.deletedCount === 1 || response?.success) {
-        setTabData(prev => prev.filter(item => item._id !== itemToDelete.id));
-        alert(`${itemToDelete.type} deleted successfully!`);
+        setTabData(prev => prev.filter(item => item._id !== id));
+        setAlertTitle("Success");
+        setAlertMessage(`${type} deleted successfully!`);
+        setAlertConfirmAction(undefined);
       } else {
-        alert(`Failed to delete ${itemToDelete.type}`);
+        setAlertTitle("Failed");
+        setAlertMessage(`Failed to delete ${type}`);
+        setAlertConfirmAction(undefined);
       }
-    } catch (err: any) {
-      console.error(err);
-      alert(err?.message || `Failed to delete ${itemToDelete.type}`);
+    } catch (error: any) {
+      setAlertTitle("Error");
+      setAlertMessage(error?.message || `Failed to delete ${type}`);
+      setAlertConfirmAction(undefined);
     } finally {
-      setDeleteModalVisible(false);
-      setItemToDelete(null);
+      setAlertVisible(true);
     }
   };
 
@@ -92,22 +102,21 @@ export default function UserProfile() {
   };
 
   const handleOnEdit = (active: string, id: string) => {
-  if (active === "Need") {
-    router.push(`/need/addNeed?needId=${id}`);
-  } else if (active === "Donation") {
-    router.push(`/donation/addDonation?donationId=${id}`);
-  }
+    if (active === "Need") {
+      router.push(`/need/addNeed?needId=${id}`);
+    } else if (active === "Donation") {
+      router.push(`/donation/addDonation?donationId=${id}`);
+    }
   };
 
   const handleOnRequests = (id: string) => {
-    router.push(`/donation/requestList?donationId=${id}`)
+    router.push(`/donation/requestList?donationId=${id}`);
   };
-
 
   if (!user) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <HeaderProfile
         name={user.username}
         userType={user.userType}
@@ -141,70 +150,22 @@ export default function UserProfile() {
 
       <Footer />
 
-      {/* Custom Delete Confirmation Modal */}
-      <Modal
-        visible={deleteModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Confirm Delete</Text>
-            <Text>Are you sure you want to delete this item?</Text>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteModalVisible(false)}>
-                <Text style={{color: COLORS.textDark}}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
-                <Text style={{color: COLORS.white}}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        onConfirm={alertConfirmAction}
+        confirmText={alertConfirmAction ? "Yes" : "OK"}
+        cancelText="No"
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: COLORS.white 
-  },
   body: { 
     flexGrow: 1, 
     padding: 10 
   },
-  modalOverlay: { 
-    flex:1, 
-    backgroundColor:'rgba(0,0,0,0.5)', 
-    justifyContent:'center', 
-    alignItems:'center' 
-  },
-  modalBox: { 
-    width:300, 
-    padding:20, 
-    backgroundColor: COLORS.white, 
-    borderRadius:10 },
-  modalTitle: { 
-    fontSize:18, 
-    fontWeight:'bold', 
-    marginBottom:10 },
-  modalButtons: { 
-    flexDirection:'row', 
-    justifyContent:'flex-end', 
-    marginTop:20, 
-    gap:10 },
-  cancelButton: { 
-    paddingVertical:8, 
-    paddingHorizontal:15, 
-    borderWidth:1, 
-    borderColor:COLORS.bgGray, 
-    borderRadius:5 },
-  deleteButton: { 
-    paddingVertical:8, 
-    paddingHorizontal:15, 
-    backgroundColor:COLORS.buttonReject, 
-    borderRadius:5 },
 });

@@ -7,7 +7,7 @@ import {
   View,
   ScrollView,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { Dropdown } from "react-native-element-dropdown";
 import SubmitButton from "../submitButton";
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
@@ -17,31 +17,38 @@ import { getAllDistrict, District } from "@/services/districtService";
 import { getAllCategory, Category } from "@/services/categorService";
 import { filterNeed } from "../../../services/needService";
 import { filterDonation } from "@/services/donationService";
+import CustomAlert from "@/constants/customAlert";
 
 interface FilterFormProp {
   section: string;
 }
 
-const FilterForm: React.FC<FilterFormProp> = ({section}) => {
+const FilterForm: React.FC<FilterFormProp> = ({ section }) => {
   const router = useRouter();
 
   const [districtList, setDistrictList] = useState<District[]>([]);
   const [categoryList, setCategoryList] = useState<Category[]>([]);
-
   const [selectedDistrict, setSelectedDistrict] = useState<string>("");
   const [province, setProvince] = useState<string>("");
   const [userType, setUserType] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  // Alert state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
     const fetchDistrictsAndCategory = async () => {
       try {
         const districts = await getAllDistrict();
         const categories = await getAllCategory();
-        setDistrictList(districts);
-        setCategoryList(categories);
-      } catch (error) {
-        alert("Failed to fetch Districts or Categories: " + error);
+        setDistrictList(districts.data);
+        setCategoryList(categories.data);
+      } catch (error: any) {
+        setAlertTitle("Error");
+        setAlertMessage(error?.message || "Failed to fetch Districts or Categories");
+        setAlertVisible(true);
       }
     };
     fetchDistrictsAndCategory();
@@ -50,7 +57,7 @@ const FilterForm: React.FC<FilterFormProp> = ({section}) => {
   const handleDistrictChange = (districtId: string) => {
     setSelectedDistrict(districtId);
     const dist = districtList.find((d) => d._id === districtId);
-    setProvince(dist?.province || ""); 
+    setProvince(dist?.province || "");
   };
 
   const handleOnAddFilter = async () => {
@@ -59,90 +66,102 @@ const FilterForm: React.FC<FilterFormProp> = ({section}) => {
       userType: userType,
       category: selectedCategory,
     };
-    console.log("section", section);
+
     try {
-      if (section == "Needies") {
-        
+      if (section === "Needies") {
         const response = await filterNeed(filterData);
-        console.log("Filter API Response:", response);
         router.push({
           pathname: "/need/needList",
-          params: {needs: JSON.stringify(response)}
+          params: { needs: JSON.stringify(response) },
         });
-      } else if (section == "Doners") {
+      } else if (section === "Doners") {
         const response = await filterDonation(filterData);
-        console.log("Filter API Response:", response);
         router.push({
           pathname: "/donation/donationList",
-          params: {donations: JSON.stringify(response)}
+          params: { donations: JSON.stringify(response) },
         });
       }
-    } catch (err) {
-      console.error("Filter API failed:", err);
+    } catch (error: any) {
+      setAlertTitle("Error");
+      setAlertMessage(error?.message || "Filter API failed ");
+      setAlertVisible(true);
     }
   };
 
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView>
-        <Text style={styles.title}>ADD FILTER</Text>
+        <Text style={styles.title}>Add Filter</Text>
 
-        {/* District Picker */}
-        <Text style={styles.label}>District</Text>
-        <Picker
-          style={styles.pickerContainer}
-          selectedValue={selectedDistrict}
-          onValueChange={(itemValue) => handleDistrictChange(itemValue)}
-        >
-          <Picker.Item label="Select District" value="" />
-          {districtList.map((dist) => (
-            <Picker.Item key={dist._id} label={dist.name} value={dist._id} />
-          ))}
-        </Picker>
+        {/* Location Section */}
+        <View style={styles.card}>
 
-        {/* Province (auto filled) */}
-        <Text style={styles.label}>Province</Text>
-        <TextInput
-          value={province}
-          editable={false}
-          style={styles.disabledInput}
-        />
+          <Text style={styles.label}>District</Text>
+          <Dropdown
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            data={districtList.map((d) => ({ label: d.name, value: d._id }))}
+            labelField="label"
+            valueField="value"
+            placeholder="Select District"
+            value={selectedDistrict}
+            onChange={(item) => handleDistrictChange(item.value)}
+          />
 
-        {/* User Type Picker */}
-        <Text style={styles.label}>User Type</Text>
-        <Picker
-          style={styles.pickerContainer}
-          selectedValue={userType}
-          onValueChange={(itemValue) => setUserType(itemValue)}
-        >
-          <Picker.Item label="Select User Type" value="" />
-          {USER_TYPES.map((type) => (
-            <Picker.Item key={type} label={type} value={type} />
-          ))}
-        </Picker>
+          <Text style={styles.label}>Province</Text>
+          <TextInput
+            value={province}
+            editable={false}
+            style={styles.disabledInput}
+          />
+        </View>
 
-        {/* Category Picker (dropdown) */}
-        <Text style={styles.label}>Category</Text>
-        <Picker
-          style={styles.pickerContainer}
-          selectedValue={selectedCategory}
-          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-        >
-          <Picker.Item label="Select Category" value="" />
-          {categoryList.map((cat) => (
-            <Picker.Item key={cat._id} label={cat.name} value={cat._id} />
-          ))}
-        </Picker>
+        {/* Details Section */}
+        <View style={styles.card}>
 
-        {/* Submit Button */}
+          <Text style={styles.label}>User Type</Text>
+          <Dropdown
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            data={USER_TYPES.map((type) => ({ label: type, value: type }))}
+            labelField="label"
+            valueField="value"
+            placeholder="Select User Type"
+            value={userType}
+            onChange={(item) => setUserType(item.value)}
+          />
+
+          <Text style={styles.label}>Category</Text>
+          <Dropdown
+            style={styles.dropdown}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            data={categoryList.map((c) => ({ label: c.name, value: c._id }))}
+            labelField="label"
+            valueField="value"
+            placeholder="Select Category"
+            value={selectedCategory}
+            onChange={(item) => setSelectedCategory(item.value)}
+          />
+        </View>
+
         <View style={styles.submitContainer}>
           <SubmitButton
-            title="ADD FILTER"
+            title="Apply Filter"
             onPress={handleOnAddFilter}
             buttonColor={COLORS.buttonOther}
           />
         </View>
       </ScrollView>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -157,23 +176,41 @@ const styles = StyleSheet.create({
     fontSize: SIZE.medium,
     color: COLORS.textHighlight,
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 15,
     textAlign: "center",
+  },
+  card: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZE.buttonRadiusSmall,
+    padding: SIZE.HorizontalPaddingSmall
+  },
+  sectionTitle: {
+    fontSize: SIZE.small,
+    fontWeight: "700",
+    color: COLORS.textHighlight,
+    marginBottom: 10,
   },
   label: {
     fontSize: SIZE.small,
-    fontWeight: "600",
+    fontWeight: "400",
     marginBottom: 5,
-    color: COLORS.textDark,
+    color: COLORS.textPlaceHolder,
   },
-  pickerContainer: {
+  dropdown: {
+    height: 30,
     borderColor: COLORS.borderSub,
-    backgroundColor: COLORS.white,
     borderWidth: 1,
     borderRadius: SIZE.buttonRadiusSmall,
-    marginBottom: 15,
-    paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
+    paddingHorizontal: 10,
+    marginBottom: 3,
+  },
+  placeholderStyle: {
+    fontSize: SIZE.small,
+    color: COLORS.textLight,
+  },
+  selectedTextStyle: {
+    fontSize: SIZE.small,
+    color: COLORS.textDark,
   },
   disabledInput: {
     backgroundColor: COLORS.bgGray,
@@ -183,7 +220,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   submitContainer: {
-    marginTop: 30,
+    marginTop: 10,
+    marginBottom: 30,
   },
 });
 

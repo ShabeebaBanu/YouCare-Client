@@ -8,7 +8,6 @@ export default function AddNeed() {
 
   return (
     <View style={STYLES.container}>
-      <Header/>
       <View style={styles.body}>
          <AddNeedForm></AddNeedForm>
       </View>

@@ -4,15 +4,18 @@ import {
   TextInput,
   StyleSheet,
   View,
-  Alert,
+  ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
+import STYLES from "@/constants/common.style";
 import { getAllDistrict, District } from "@/services/districtService";
 import { updateUserById, resetPassword } from "@/services/userService";
+import { isPasswordValid } from "@/util/validation";
 import { getUserId } from "@/constants/config";
+import CustomAlert from "@/constants/customAlert"; 
 
 interface ProfileFormProps {
   initialData: {
@@ -36,17 +39,22 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
   const [organizationAddress, setOrganizationAddress] = useState(initialData.organizationAddress || "");
   const [isEditable, setIsEditable] = useState(false);
   const [districtList, setDistrictList] = useState<District[]>([]);
-  
+
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+
+  // Alert states
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
         const response = await getAllDistrict();
-        setDistrictList(response || []);
-      } catch (err) {
-        console.error("Failed to fetch districts:", err);
+        setDistrictList(response.data || []);
+      } catch (error: any) {
+        showAlert("Error", error?.message || "Failed to fetch districts ");
       }
     };
     fetchDistricts();
@@ -93,14 +101,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
       const response = await updateUserById(userId, payload);
 
       if (response.success) {
-        Alert.alert("Success", "Profile updated successfully");
+        showAlert("Success", response.message || "Profile updated successfully");
         setIsEditable(false);
       } else {
-        Alert.alert("Error", response.message || "Failed to update profile");
+        showAlert("Error", response.message || "Failed to update profile");
       }
     } catch (error: any) {
-      console.error("Error updating profile:", error);
-      Alert.alert("Error", "Error updating profile. Please try again.");
+      showAlert("Error", error?.message || "Error updating profile. Please try again.");
     }
   };
 
@@ -110,40 +117,46 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
   };
 
   const handleOnResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
-      return;
+    const passwordValidationMessage = isPasswordValid(newPassword);
+        if (passwordValidationMessage) {
+          showAlert("Error", passwordValidationMessage || "Password must be at least 6 characters");
+          return;
     }
 
     try {
-      const response = await resetPassword(email, { newPassword: newPassword });
+      const response = await resetPassword(email, { newPassword });
 
       if (response.success) {
-        alert("Success: Password updated successfully");
+        showAlert("Success", response.message || "Password updated successfully");
         setIsResettingPassword(false);
         setNewPassword("");
       } else {
-        alert("Error" + response.message || "Failed to update password");
+        showAlert("Error", response.message || "Failed to update password");
       }
     } catch (error: any) {
-      console.error("Error resetting password:", error);
-       alert("Error: Failed to update password");
+      showAlert("Error", error?.message || "Failed to update password");
     }
+  };
+
+  const showAlert = (title: string, message: string) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
   };
 
   return (
     <KeyboardAvoidingView style={styles.container}>
-      <View>
+      <ScrollView>
         {!isResettingPassword ? (
           <>
             <TextInput
-              style={[styles.input, styles.disabledInput]}
+              style={[STYLES.input, styles.disabledInput]}
               value={username}
               editable={false}
               placeholder="Name"
             />
             <TextInput
-              style={[styles.input, styles.disabledInput]}
+              style={[STYLES.input, styles.disabledInput]}
               value={email}
               editable={false}
               placeholder="Email"
@@ -153,14 +166,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
               <Picker
                 selectedValue={userType}
                 onValueChange={(value) => setUserType(value)}
-                style={styles.input}
+                style={STYLES.input}
               >
                 <Picker.Item label="individual" value="individual" />
                 <Picker.Item label="organization" value="organization" />
               </Picker>
             ) : (
               <TextInput
-                style={[styles.input, styles.disabledInput]}
+                style={[STYLES.input, styles.disabledInput]}
                 value={userType}
                 editable={false}
                 placeholder="User Type"
@@ -170,14 +183,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
             {userType === "organization" && (
               <>
                 <TextInput
-                  style={[styles.input, !isEditable && styles.disabledInput]}
+                  style={[STYLES.input, !isEditable && styles.disabledInput]}
                   value={organizationName}
                   onChangeText={setOrganizationName}
                   editable={isEditable}
                   placeholder="Organization Name"
                 />
                 <TextInput
-                  style={[styles.input, !isEditable && styles.disabledInput]}
+                  style={[STYLES.input, !isEditable && styles.disabledInput]}
                   value={organizationAddress}
                   onChangeText={setOrganizationAddress}
                   editable={isEditable}
@@ -190,7 +203,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
               <Picker
                 selectedValue={district}
                 onValueChange={handleDistrictChange}
-                style={styles.input}
+                style={STYLES.input}
               >
                 {districtList.map((dist) => (
                   <Picker.Item key={dist._id} label={dist.name} value={dist.name} />
@@ -198,7 +211,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
               </Picker>
             ) : (
               <TextInput
-                style={[styles.input, styles.disabledInput]}
+                style={[STYLES.input, styles.disabledInput]}
                 value={district}
                 editable={false}
                 placeholder="District"
@@ -206,7 +219,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
             )}
 
             <TextInput
-              style={[styles.input, styles.disabledInput]}
+              style={[STYLES.input, styles.disabledInput]}
               value={province}
               editable={false}
               placeholder="Province"
@@ -215,7 +228,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
         ) : (
           <>
             <TextInput
-              style={[styles.input, styles.disabledInput]}
+              style={[STYLES.input, styles.disabledInput]}
               placeholder="Enter New Password"
               value={newPassword}
               onChangeText={setNewPassword}
@@ -228,31 +241,38 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
             />
           </>
         )}
-      </View>
 
-      {!isResettingPassword && (
-        <View style={styles.button}>
-          {!isEditable ? (
+        {!isResettingPassword && (
+          <View style={styles.button}>
+            {!isEditable ? (
+              <SubmitButton
+                title="EDIT"
+                onPress={handleOnEdit}
+                buttonColor={COLORS.buttonOther}
+              />
+            ) : (
+              <SubmitButton
+                title="SAVE"
+                onPress={handleOnSave}
+                buttonColor={COLORS.buttonOdd}
+              />
+            )}
+
             <SubmitButton
-              title="EDIT"
-              onPress={handleOnEdit}
+              title="CHANGE PASSWORD"
+              onPress={handleOnResetPasswordClick}
               buttonColor={COLORS.buttonOther}
             />
-          ) : (
-            <SubmitButton
-              title="SAVE"
-              onPress={handleOnSave}
-              buttonColor={COLORS.buttonOdd}
-            />
-          )}
+          </View>
+        )}
+      </ScrollView>
 
-          <SubmitButton
-            title="CHANGE PASSWORD"
-            onPress={handleOnResetPasswordClick}
-            buttonColor={COLORS.buttonOther}
-          />
-        </View>
-      )}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -263,14 +283,6 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: "flex-start",
   },
-  input: {
-    borderColor: COLORS.borderSub,
-    borderWidth: 1,
-    borderRadius: SIZE.buttonRadiusSmall,
-    marginBottom: 15,
-    paddingVertical: SIZE.VerticlePaddingSmall,
-    paddingHorizontal: SIZE.HorizontalPaddingSmall,
-  },
   disabledInput: {
     backgroundColor: COLORS.bgLight,
     color: COLORS.textPlaceHolder,
@@ -279,7 +291,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 5,
     width: "100%",
-    marginTop: "auto",
+    marginTop: 20,
   },
 });
 

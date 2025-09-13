@@ -8,8 +8,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 import COLORS from "@/constants/colors";
+import STYLES from "@/constants/common.style";
 import SIZE from "@/constants/size";
 import CardPublic from "@/assets/components/cardPublic";
 import Footer from "@/assets/components/footer";
@@ -47,7 +49,7 @@ const PublicProfile: React.FC = () => {
         const userNeeds = await getNeedByCreatedBy(userId);
         const userDonations = await getDonationByCreatedBy(userId);
 
-        setUser(userDetails);
+        setUser(userDetails.data);
         setNeeds(Array.isArray(userNeeds.data) ? userNeeds.data : []);
         setDonations(Array.isArray(userDonations.data) ? userDonations.data : []);
       } catch (error: any) {
@@ -73,8 +75,7 @@ const PublicProfile: React.FC = () => {
     setAlertTitle("Reject Request");
     setAlertMessage("Are you sure you want to reject this request?");
     setAlertConfirm(() => () => {
-      console.log("Rejected");
-      setAlertVisible(false);
+    setAlertVisible(false);
     });
     setAlertVisible(true);
   };
@@ -88,14 +89,20 @@ const PublicProfile: React.FC = () => {
   const tabData = Array.isArray(selectedData) ? selectedData : [];
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={STYLES.container}>
+    <View style={styles.header}>
+      <LinearGradient
+        colors={[COLORS.bgDark, "#3a506b"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.headerGradient}
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {user?.username ? user.username.charAt(0).toUpperCase() : "U"}
           </Text>
         </View>
+
         <View style={styles.userInfo}>
           {user?.userType?.toLowerCase() === "organization" ? (
             <>
@@ -110,19 +117,21 @@ const PublicProfile: React.FC = () => {
             </>
           )}
         </View>
+
         {user?.userType?.toLowerCase() !== "organization" && (
           <View style={styles.districtContainer}>
             <Text style={styles.district}>{user?.district || ""}</Text>
           </View>
         )}
+      </LinearGradient>
       </View>
 
-      {/* Action Buttons */}
+
       <View style={styles.actionButtons}>
         <CustomButtonSmall
           title="Accept Request"
           onPress={() => handleOnAccept()}
-          buttonColor={COLORS.buttonAccept}
+          buttonColor={COLORS.buttonOther}
         />
         <CustomButtonSmall
           title="Reject Request"
@@ -131,7 +140,6 @@ const PublicProfile: React.FC = () => {
         />
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "Need" && styles.activeTab]}
@@ -155,7 +163,6 @@ const PublicProfile: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Content */}
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.textLight} />
@@ -181,7 +188,6 @@ const PublicProfile: React.FC = () => {
 
       <Footer />
 
-      {/* 🔹 CustomAlert */}
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}
@@ -198,74 +204,82 @@ const PublicProfile: React.FC = () => {
 export default PublicProfile;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white },
-
   header: {
+  borderBottomLeftRadius: 25,
+  borderBottomRightRadius: 25,
+  overflow: "hidden", 
+  elevation: 3,
+  },
+  headerGradient: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 15,
-    paddingVertical: 15,
-    backgroundColor: COLORS.bgDark,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 3 },
+    paddingHorizontal: 20,
+    paddingVertical: 28,
   },
   avatar: {
-    width: 50,
-    height: 50,
+    width: 70,
+    height: 70,
     borderRadius: 35,
     backgroundColor: COLORS.white,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 15,
+    marginRight: 16,
     borderWidth: 2,
-    borderColor: COLORS.bgGray,
+    borderColor: "#fff",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   avatarText: {
     color: COLORS.bgDark,
-    fontSize: SIZE.average,
-    fontWeight: "bold",
+    fontSize: SIZE.large,
+    fontWeight: "700",
   },
   userInfo: {
-    flex: 1,
+    flex: 1, 
+    justifyContent: "center",
   },
   name: {
     fontSize: SIZE.medium,
     fontWeight: "bold",
     color: COLORS.white,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   userType: {
     fontSize: SIZE.small,
-    color: COLORS.textLight,
+    color: "rgba(255,255,255,0.85)",
   },
   districtContainer: {
-    marginLeft: "auto",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginLeft: 10, 
+    alignSelf: "flex-start", 
   },
   district: {
     fontSize: SIZE.small,
-    color: COLORS.textHighlight,
+    color: COLORS.white,
     fontWeight: "600",
   },
-
   actionButtons: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "center",
     paddingHorizontal: 20,
-    marginTop: 12,
-    gap: 12,
+    marginTop: 15,
+    gap: 14,
   },
-
   tabContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 15,
+    justifyContent: "space-evenly",
+    marginTop: 18,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.bgGray,
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    marginHorizontal: 15,
+    overflow: "hidden",
   },
   tab: {
     flex: 1,
@@ -284,9 +298,8 @@ const styles = StyleSheet.create({
     color: COLORS.bgDark,
     fontWeight: "bold",
   },
-
   body: {
-    padding: 15,
+    padding: 18,
     flexGrow: 1,
     backgroundColor: COLORS.bgLight,
   },

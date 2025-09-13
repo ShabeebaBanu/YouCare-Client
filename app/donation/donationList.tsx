@@ -67,7 +67,6 @@ export default function DonationList() {
 
   return (
     <View style={STYLES.container}>
-      <Header/>
       <FilterTab
         title='Doners'
       />

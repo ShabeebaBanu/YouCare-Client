@@ -1,13 +1,13 @@
 import { View, StyleSheet, Image} from 'react-native'
-import COLORS from '@/constants/colors'
+import STYLES from '@/constants/common.style'
 import VerifyEmailForm from "../../assets/components/forms/verifyEmailForm"
 
 export default function VerifyEmail() {
   return (
-    <View style={styles.container}>
+    <View style={STYLES.container}>
       <View style={styles.logoContainer}>
          <Image 
-          style={ styles.logo}
+          style={ STYLES.logo}
           source= {require('../../assets/images/LogoLight.png')}
         />
       </View>
@@ -19,19 +19,10 @@ export default function VerifyEmail() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: COLORS.bgLight
-    },
     logoContainer: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    logo: {
-      width: 120,
-      height: 120,
-      marginBottom: 10
     },
     formContainer: {
       flex: 2,

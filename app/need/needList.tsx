@@ -79,7 +79,6 @@ const NeedList = () => {
 
   return (
     <View style={STYLES.container}>
-      <Header />
       <FilterTab title="Needies" />
       <View style={styles.body}>
         {loading ? (
