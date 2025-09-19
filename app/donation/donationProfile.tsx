@@ -69,7 +69,7 @@ export default function DonationProfile() {
         phone={donation.donerPhone ?? ""}
         description={donation.description ?? ""}
         quantity={donation.quantity ?? 0}
-        images={[]}
+        image={donation.image ?? ""}
       />
       <Footer />
 

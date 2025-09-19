@@ -14,6 +14,7 @@ export type Donation = {
     _id: string;
     name: string;
   };
+  image?:string;
   donerName?: string;
   donerPhone?: string;
   pickupAddress?: string;

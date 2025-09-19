@@ -34,6 +34,19 @@ function RequestList() {
     setAlertVisible(true);
   };
 
+  // Function to format date & time
+  const formatDateTime = (isoString: string) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   useEffect(() => {
     if (donationId) {
       fetchDonationDetails(donationId as string);
@@ -74,10 +87,10 @@ function RequestList() {
   }
 
   const handleOnView = (userId: string) => {
-     router.push({
-        pathname: "/need/publicProfile",
-        params: { userId, donationId }
-     });
+    router.push({
+      pathname: "/need/publicProfile",
+      params: { userId, donationId }
+    });
   };
 
   return (
@@ -87,13 +100,17 @@ function RequestList() {
         <View style={styles.headerWrapper}>
           <View style={styles.headerAccent} />
           <View style={styles.headerBox}>
-            <Image source={{ uri: "" }} style={styles.headerImage} />
+            <Image 
+              source={donation.image} 
+              style={styles.headerImage} 
+              resizeMode="cover"
+            />
             <View style={styles.headerRight}>
               <Text style={styles.title}>{donation.title}</Text>
               <Text style={styles.userType}>{donation.userType}</Text>
               <View style={styles.rowSpace}>
                 <Text style={styles.district}>{donation.district.name}</Text>
-                <Text style={styles.date}>{donation.updatedAt}</Text>
+                <Text style={styles.date}>{formatDateTime(donation.updatedAt)}</Text>
               </View>
             </View>
           </View>
@@ -107,7 +124,7 @@ function RequestList() {
             name={req.needyDetails.username}
             userType={req.needyDetails.userType}
             district={req.needyDetails.district}
-            date={req.donationRequestDetail.updatedAt}
+            date={formatDateTime(req.donationRequestDetail.updatedAt)}
             onView={() => handleOnView(req.needyDetails.id)}
           />
         ))}

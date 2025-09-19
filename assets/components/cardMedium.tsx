@@ -6,6 +6,7 @@ import {
   Image,
   View,
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import CustomButtonSmall from "./customButtonSmall";
@@ -102,10 +103,15 @@ const CardMedium: React.FC<CardMediumProps> = ({
       >
         <Image source={imageUrl} style={styles.image} resizeMode="cover" />
 
-        <View style={styles.rightContent}>
-  
-          <Text style={styles.title}>{title}</Text>
+        {/* Organization Icon at Top Right */}
+        {userType.toLowerCase() === "organization" && (
+          <View style={styles.orgIcon}>
+            <Ionicons name="globe" size={16} color={COLORS.textPlaceHolder} />
+          </View>
+        )}
 
+        <View style={styles.rightContent}>
+          <Text style={styles.title}>{title}</Text>
           <Text style={styles.name}>{name}</Text>
 
           <View style={styles.bottomRow}>
@@ -146,20 +152,20 @@ const CardMedium: React.FC<CardMediumProps> = ({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    borderRadius: 16,
+    borderRadius: 10,
     backgroundColor: COLORS.bgLight,
-    marginVertical: 8,
-    marginHorizontal: 6,
+    marginVertical: 6,
+    marginHorizontal: 4,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: COLORS.bgGray,
-    padding: 12,
+    padding: 8,
     position: "relative",
     alignItems: "flex-start",
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.1, 
-    shadowRadius: 4, 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   image: {
@@ -168,13 +174,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginRight: 12,
   },
+  orgIcon: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: COLORS.bgLight,
+    borderRadius: 12,
+    padding: 4,
+    zIndex: 10,
+  },
   rightContent: {
     flex: 1,
     justifyContent: "space-between",
   },
   title: {
-    fontSize: SIZE.small + 2,
-    fontWeight: "700",
+    fontSize: SIZE.small + 1,
+    fontWeight: "600",
     color: COLORS.textDark,
     marginBottom: 2,
   },

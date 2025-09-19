@@ -65,7 +65,7 @@ const NeedList = () => {
       key={item._id}
       usage="NEED"
       id={item._id}
-      imageUrl={ item }
+      imageUrl={ item.image }
       title={item.title}
       name={item.needyName ?? "Unknown"}
       userType={item.userType ?? ""}

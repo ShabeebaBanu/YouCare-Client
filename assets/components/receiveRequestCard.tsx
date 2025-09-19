@@ -7,7 +7,7 @@ interface ReceiveRequestProps {
   title: string;
   name: string;
   date: string;
-  imageUrl?: string;
+  imageUrl?: any;
   onPress?: () => void;
 }
 
@@ -29,7 +29,7 @@ const ReceiveRequestCard: React.FC<ReceiveRequestProps> = ({
         {/* Left Image Box */}
         <View style={styles.imageBox}>
           {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.image} />
+            <Image source={imageUrl} style={styles.image} />
           ) : (
             <Ionicons name="image-outline" size={24} color={COLORS.textLight} />
           )}

@@ -72,13 +72,13 @@ const FilterForm: React.FC<FilterFormProp> = ({ section }) => {
         const response = await filterNeed(filterData);
         router.push({
           pathname: "/need/needList",
-          params: { needs: JSON.stringify(response) },
+          params: { needs: JSON.stringify(response.data) },
         });
       } else if (section === "Doners") {
         const response = await filterDonation(filterData);
         router.push({
           pathname: "/donation/donationList",
-          params: { donations: JSON.stringify(response) },
+          params: { donations: JSON.stringify(response.data) },
         });
       }
     } catch (error: any) {

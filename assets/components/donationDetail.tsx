@@ -4,22 +4,14 @@ import {
   StyleSheet,
   Image,
   Text,
-  FlatList,
-  Dimensions,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import COLORS from '../../constants/colors';
 import STYLES from '@/constants/common.style';
 import SIZE from '../../constants/size';
 import SubmitButton from './submitButton';
 import { FontAwesome } from '@expo/vector-icons';
-
-const dummyData = {
-  images: [
-    require('../images/need1.jpeg'),
-    require('../images/donate1.jpeg'),
-  ],
-};
 
 interface DetailProps {
   title: string;
@@ -29,41 +21,33 @@ interface DetailProps {
   phone: string;
   description: string;
   quantity: number;
-  images: [];
+  image: string; 
+  profileImage?: string; 
 }
 
-const donationDetail: React.FC<DetailProps> = ({
+const DonationDetail: React.FC<DetailProps> = ({
   title,
   name,
   type,
   address,
   phone,
   description,
-  quantity
+  quantity,
+  image,
+  profileImage,
 }) => {
 
   const handleOnRequest = () => {
-    //navigate('');
+    // navigate('');
   };
-
 
   return (
     <View style={STYLES.container}>
-      <View>
-        <FlatList
-          data={dummyData.images}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          keyExtractor={(_, index) => index.toString()}
-          style={{ height: (width - 20) * 9 / 16 }}
-          renderItem={({ item }) => (
-            <View style={styles.imageBox}>
-              <Image source={item} style={styles.carouselImage} resizeMode="cover" />
-            </View>
-          )}
-        />
-      </View>
+      {image ? (
+        <View style={styles.imageBox}>
+          <Image source={{ uri: image }} style={styles.mainImage} resizeMode="cover" />
+        </View>
+      ) : null}
 
       <ScrollView style={styles.scrollContent} contentContainerStyle={{ paddingBottom: 30 }}>
         <View style={styles.content}>
@@ -82,7 +66,10 @@ const donationDetail: React.FC<DetailProps> = ({
 
           <View style={styles.profileSummaryContainer}>
             <View style={styles.profile}>
-              <Image source={require('../images/need1.jpeg')} style={styles.profileIcon} />
+              <Image
+                source={profileImage ? { uri: profileImage } : require('../images/need1.jpeg')}
+                style={styles.profileIcon}
+              />
               <View>
                 <Text style={styles.profileName}>{name}</Text>
                 <Text style={styles.userType}>{type}</Text>
@@ -114,7 +101,7 @@ const donationDetail: React.FC<DetailProps> = ({
   );
 };
 
-export default donationDetail;
+export default DonationDetail;
 
 const { width } = Dimensions.get('window');
 
@@ -123,28 +110,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageBox: {
-    width: width - 20,
+    width: width - 10,
     aspectRatio: 16 / 9,
     backgroundColor: COLORS.bgLight,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 8,
   },
-  carouselImage: {
-    width: '99%',
+  mainImage: {
+    width: '100%',
     height: '100%',
   },
   content: {
     marginTop: 20,
     padding: 15,
-    position: 'relative', 
+    position: 'relative',
   },
   iconsTopRight: {
     position: 'absolute',
     top: 10,
     right: 10,
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.9)', 
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 20,
     paddingHorizontal: 8,
     paddingVertical: 4,

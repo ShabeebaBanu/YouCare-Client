@@ -8,6 +8,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
@@ -40,7 +41,6 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
   const [districtList, setDistrictList] = useState<District[]>([]);
   const [isEdit, setIsEdit] = useState(false);
 
-  // form fields
   const [title, setTitle] = useState("");
   const [item, setItem] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -51,11 +51,10 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [mode, setMode] = useState("");
   const [address, setAddress] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+  const [image, setImage] = useState<string | null>(null);
   const [district, setDistrict] = useState("");
   const [createdBy, setCreatedBy] = useState("");
 
-  // custom alert state
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -94,7 +93,7 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           setMode(existingNeed.delivary || "");
           setAddress(existingNeed.delivaryAddress || "");
           setDistrict(existingNeed.district || "");
-          setImages(existingNeed.images || []);
+          setImage(existingNeed.images?.[0] || null); 
         }
       } catch (error: any) {
         showAlert("Error", error?.message || "Failed to fetch categories or need data");
@@ -113,6 +112,26 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
     setCategory(text.toUpperCase());
   };
 
+  const pickImage = async () => {
+    if (image) return; 
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+      console.log("image:", asset.uri);
+      setImage(asset.uri);
+    }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+  };
+
   const handleOnSubmit = async () => {
     try {
       const formData = new FormData();
@@ -128,23 +147,23 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
       formData.append("district", district);
       formData.append("createdBy", createdBy);
 
-      images.forEach((uri, index) => {
-        if (uri.startsWith("http")) {
-          formData.append("existingImages", uri);
-        } else {
-          const fileName = uri.split("/").pop() || `image_${index}.jpg`;
-          const fileExtension = fileName.split(".").pop()?.toLowerCase();
-          if (!allowedImageExtension.includes(fileExtension || "")) {
-            showAlert("Invalid File", `Invalid file type: ${fileExtension}`);
-            return;
-          }
-          formData.append("images", {
-            uri,
+      if (image) {
+        const fileName = image.split("/").pop() || "image.jpg";
+        const ext = fileName.split(".").pop()?.toLowerCase();
+        const mimeType = `image/${ext === "jpg" ? "jpeg" : ext}`;
+
+       if (Platform.OS === "web") {
+            const res = await fetch(image);
+            const blob = await res.blob();
+            formData.append("image", blob, fileName);
+          } else {
+            formData.append("image", {
+            uri: image,
             name: fileName,
-            type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
+            type: mimeType,
           } as any);
         }
-      });
+      }
 
       let response;
       if (isEdit && finalNeedId) {
@@ -165,174 +184,66 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
     }
   };
 
-  const pickImage = async () => {
-    if (images.length >= 2) return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-    if (!result.canceled && result.assets.length > 0) {
-      setImages((prev) => [...prev, result.assets[0].uri]);
-    }
-  };
-
-  const removeImage = (uri: string) => {
-    setImages((prev) => prev.filter((img) => img !== uri));
-  };
-
-
   return (
     <KeyboardAvoidingView style={styles.container}>
       <ScrollView>
         <Text style={STYLES.formTitle}>{isEdit ? "EDIT NEED" : "ADD NEED"}</Text>
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Title Your Need"
-          value={title}
-          onChangeText={setTitle}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Title Your Need" value={title} onChangeText={setTitle} placeholderTextColor={COLORS.textPlaceHolder} />
 
         <View style={styles.itemContainer}>
           <View style={styles.halfItem}>
-            <TextInput
-              style={STYLES.input}
-              placeholder="Item Name"
-              placeholderTextColor={COLORS.textPlaceHolder}
-              value={item}
-              onChangeText={setItem}
-            />
+            <TextInput style={STYLES.input} placeholder="Item Name" value={item} onChangeText={setItem} placeholderTextColor={COLORS.textPlaceHolder} />
           </View>
           <View style={styles.halfItem}>
-            <Picker
-              selectedValue={selectedCategory}
-              onValueChange={handlePickerChange}
-              style={STYLES.input}
-            >
+            <Picker selectedValue={selectedCategory} onValueChange={handlePickerChange} style={STYLES.input}>
               <Picker.Item label="Select Category" value="" />
-              {categoryList.map((cat) => (
-                <Picker.Item label={cat.name} value={cat.name} key={cat._id} />
-              ))}
+              {categoryList.map((cat) => (<Picker.Item label={cat.name} value={cat.name} key={cat._id} />))}
               <Picker.Item label="Other (Type your own)" value="__custom__" />
             </Picker>
           </View>
         </View>
 
-        {isCustomCategory && (
-          <TextInput
-            style={STYLES.input}
-            placeholder="Enter Custom Category"
-            placeholderTextColor={COLORS.textPlaceHolder}
-            value={category}
-            onChangeText={handleCustomCategoryInput}
-          />
-        )}
+        {isCustomCategory && <TextInput style={STYLES.input} placeholder="Enter Custom Category" value={category} onChangeText={handleCustomCategoryInput} placeholderTextColor={COLORS.textPlaceHolder} />}
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-          multiline
-          numberOfLines={3}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Description" value={description} onChangeText={setDescription} multiline numberOfLines={3} placeholderTextColor={COLORS.textPlaceHolder} />
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Quantity"
-          value={quantity}
-          onChangeText={setQuantity}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Quantity" value={quantity} onChangeText={setQuantity} placeholderTextColor={COLORS.textPlaceHolder} />
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Requester Name"
-          value={name}
-          onChangeText={setName}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Requester Name" value={name} onChangeText={setName} placeholderTextColor={COLORS.textPlaceHolder} />
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Requester Phone"
-          value={phone}
-          onChangeText={setPhone}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Requester Phone" value={phone} onChangeText={setPhone} placeholderTextColor={COLORS.textPlaceHolder} />
 
         <Picker selectedValue={district} onValueChange={setDistrict} style={STYLES.input}>
           <Picker.Item label="Select District" value="" />
-          {districtList.map((dist) => (
-            <Picker.Item key={dist._id} label={dist.name} value={dist._id} />
-          ))}
+          {districtList.map((dist) => (<Picker.Item key={dist._id} label={dist.name} value={dist._id} />))}
         </Picker>
 
-        <TextInput
-          style={STYLES.input}
-          placeholder="Delivery Address"
-          value={address}
-          onChangeText={setAddress}
-          placeholderTextColor={COLORS.textPlaceHolder}
-        />
+        <TextInput style={STYLES.input} placeholder="Delivery Address" value={address} onChangeText={setAddress} placeholderTextColor={COLORS.textPlaceHolder} />
 
-        <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
-          Delivery Needed
-        </Text>
+        <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>Delivery Needed</Text>
         <View style={{ flexDirection: "row", marginBottom: 10 }}>
           {deliveryOptions.map((option) => (
-            <TouchableOpacity
-              key={option}
-              onPress={() => setMode(option)}
-              style={{ marginRight: 10, flexDirection: "row", alignItems: "center" }}
-            >
-              <View
-                style={{
-                  height: 20,
-                  width: 20,
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: COLORS.textHighlight,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 5,
-                }}
-              >
-                {mode === option && (
-                  <View
-                    style={{
-                      height: 10,
-                      width: 10,
-                      borderRadius: 5,
-                      backgroundColor: COLORS.textHighlight,
-                    }}
-                  />
-                )}
+            <TouchableOpacity key={option} onPress={() => setMode(option)} style={{ marginRight: 10, flexDirection: "row", alignItems: "center" }}>
+              <View style={{ height: 20, width: 20, borderRadius: 10, borderWidth: 1, borderColor: COLORS.textHighlight, alignItems: "center", justifyContent: "center", marginRight: 5 }}>
+                {mode === option && <View style={{ height: 10, width: 10, borderRadius: 5, backgroundColor: COLORS.textHighlight }} />}
               </View>
               <Text>{option}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
-          Upload up to 2 images
-        </Text>
+        <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>Upload 1 image</Text>
         <View style={styles.imageContainer}>
-          {images.map((uri, index) => (
-            <View key={index} style={styles.imageWrapper}>
-              <Image source={{ uri }} style={styles.image} />
-              <TouchableOpacity
-                onPress={() => removeImage(uri)}
-                style={styles.removeButton}
-              >
+          {image && (
+            <View style={styles.imageWrapper}>
+              <Image source={{ uri: image }} style={styles.image} />
+              <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
                 <Text style={styles.removeButtonText}>X</Text>
               </TouchableOpacity>
             </View>
-          ))}
-          {images.length < 2 && (
+          )}
+          {!image && (
             <TouchableOpacity onPress={pickImage} style={styles.imageUploadBox}>
               <Text style={{ color: COLORS.textPlaceHolder, fontSize: 20 }}>+</Text>
             </TouchableOpacity>
@@ -341,89 +252,29 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
 
         <View style={styles.button}>
           <View style={styles.halfItem}>
-            <SubmitButton
-              title={isEdit ? "UPDATE NEED" : "ADD NEED"}
-              onPress={handleOnSubmit}
-              buttonColor={COLORS.buttonOther}
-            />
+            <SubmitButton title={isEdit ? "UPDATE NEED" : "ADD NEED"} onPress={handleOnSubmit} buttonColor={COLORS.buttonOther} />
           </View>
           <View style={styles.halfItem}>
-            <SubmitButton
-              title="CANCEL"
-              onPress={() => {}}
-              buttonColor={COLORS.textHighlight}
-            />
+            <SubmitButton title="CANCEL" onPress={() => {}} buttonColor={COLORS.textHighlight} />
           </View>
         </View>
       </ScrollView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert visible={alertVisible} title={alertTitle} message={alertMessage} onClose={() => setAlertVisible(false)} />
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 15 
-  },
-  itemContainer: { 
-    flexDirection: "row", 
-    justifyContent: "space-between" 
-  },
-  halfItem: { 
-    width: "48%" 
-  },
-  button: {
-    marginTop: 20,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  imageContainer: { 
-    flexDirection: "row", 
-    flexWrap: "wrap", 
-    marginVertical: 10, 
-    gap: 10 
-  },
-  imageWrapper: { 
-    position: "relative" 
-  },
-  image: { 
-    width: 70, 
-    height: 70, 
-    borderRadius: SIZE.buttonRadiusSmall 
-  },
-  removeButton: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    backgroundColor: "red",
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeButtonText: { 
-    color: "#fff", 
-    fontWeight: "bold", 
-    fontSize: 12 
-  },
-  imageUploadBox: {
-    width: 70,
-    height: 70,
-    borderRadius: SIZE.buttonRadiusSmall,
-    borderWidth: 1,
-    borderColor: COLORS.borderSub,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: COLORS.white,
-  },
+  container: { flex: 1, padding: 15 },
+  itemContainer: { flexDirection: "row", justifyContent: "space-between" },
+  halfItem: { width: "48%" },
+  button: { marginTop: 20, marginBottom: 10, flexDirection: "row", justifyContent: "space-between" },
+  imageContainer: { flexDirection: "row", flexWrap: "wrap", marginVertical: 10, gap: 10 },
+  imageWrapper: { position: "relative" },
+  image: { width: 70, height: 70, borderRadius: SIZE.buttonRadiusSmall },
+  removeButton: { position: "absolute", top: -6, right: -6, backgroundColor: "red", borderRadius: 10, width: 20, height: 20, justifyContent: "center", alignItems: "center" },
+  removeButtonText: { color: "#fff", fontWeight: "bold", fontSize: 12 },
+  imageUploadBox: { width: 70, height: 70, borderRadius: SIZE.buttonRadiusSmall, borderWidth: 1, borderColor: COLORS.borderSub, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.white },
 });
 
 export default AddNeedForm;

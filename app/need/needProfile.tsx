@@ -61,7 +61,7 @@ export default function NeedProfile() {
           phone={need.needyPhone ?? ""}
           description={need.description ?? ""}
           quantity={need.quantity ?? 0}
-          images={[]}
+          image={need.image ?? ""}
         />
       )}
       <Footer />

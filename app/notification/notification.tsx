@@ -8,7 +8,7 @@ import CardMedium from '@/assets/components/cardMedium';
 import SendRequestCard from '@/assets/components/sendRequestCard';
 import ReceiveRequestCard from '@/assets/components/receiveRequestCard';
 import { getWishlistByUserId } from '../../services/wishlistService';
-import { getAllDonationRequestForAUser } from '../../services/donationRequestService'
+import { getAllDonationRequestForAUser, deleteDonationRequest } from '../../services/donationRequestService'
 import { getUserId } from '@/constants/config';
 import { useRouter } from "expo-router";
 import CustomAlert from '@/constants/customAlert';  
@@ -63,7 +63,20 @@ function Notification() {
 
   const handleOnNeedSelect = (needId: string) => {
     router.push(`/need/needProfile?id=${needId}`);
-  }; 
+  };
+  
+  const handleCancelRequest = async (sendRequestId: string) => {
+    try {
+      const response = await deleteDonationRequest(sendRequestId);
+      showAlert("Success: ", response.message);
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Failed to fetch data. Please try again.");
+      setData([]);
+    } finally {
+      setLoading(false);
+      fetchData("Donation-Request", userId);
+    }
+  };
 
   const handleOnReceiveRequestSelect = (userId: string, donationId: string) => {
     router.push({
@@ -112,7 +125,7 @@ function Notification() {
                 key={item._id}
                 usage='WISHLIST'
                 id={item._id}
-                imageUrl={item.imageUrl}
+                imageUrl={item.needId?.image}
                 title={item.needId?.title}
                 name={item.needId?.needyName ?? 'Unknown'}
                 userType="Individual"
@@ -136,11 +149,13 @@ function Notification() {
                   name={item.donationId?.donerName ?? "Unknown"}
                   date={dayjs(item.createdAt).format("MMMM D, YYYY h:mm A")}
                   onPress={() => showAlert("Info", "You sent this request")}
+                  onCancel={() => handleCancelRequest(item._id)}
                 />
               ) : (
                 <ReceiveRequestCard
                   title={item.donationId?.title ?? " "}
                   name={item.name}
+                  imageUrl={item.donationId?.image ?? ""}
                   date={dayjs(item.createdAt).format("MMMM D, YYYY h:mm A")}
                   onPress={() => handleOnReceiveRequestSelect(item.userId, item.donationId._id)}
                 />

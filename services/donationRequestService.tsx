@@ -65,3 +65,13 @@ export const getAllDonationRequestForAUser = async (userId: any) => {
     }
 }
 
+export const deleteDonationRequest = async (donationRequestId: any) => {
+    try {
+        const response = await axios.delete(`${API}/api/request/${donationRequestId}`);
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Delete Donation Request");
+    }
+}
+
+

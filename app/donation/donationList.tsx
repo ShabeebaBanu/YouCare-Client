@@ -53,7 +53,7 @@ export default function DonationList() {
       key={item._id}
       id={item._id}
       usage='DONATION'
-      imageUrl={ item }
+      imageUrl={ item.image }
       title={item.title}
       name={item.donerName ?? "Unknown"}
       userType={item.userType ?? ""}

@@ -14,6 +14,7 @@ export type Need = {
     _id: string;
     name: string;
   };
+  image?: string;
   needyName?: string;
   needyPhone?: string;
   delivaryAddress?: string;

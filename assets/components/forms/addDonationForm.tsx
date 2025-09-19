@@ -8,6 +8,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import SubmitButton from "../submitButton";
 import SIZE from "@/constants/size";
@@ -19,24 +20,27 @@ import STYLES from "@/constants/common.style";
 
 import { getAllCategory, Category } from "../../../services/categorService";
 import { getAllDistrict, District } from "../../../services/districtService";
-import { createDonation, 
-         getDonationByDonationId,
-         updateDonation
+import {
+  createDonation,
+  getDonationByDonationId,
+  updateDonation,
 } from "../../../services/donationService";
 
 import { getUserId } from "@/constants/config";
 import { useLocalSearchParams } from "expo-router";
-import { navigate } from "../../../navigation/globalNavigation"
+import { navigate } from "../../../navigation/globalNavigation";
 
 interface AddDonationFormProps {
-  donationId?: string; 
-  onSuccess?: () => void; 
+  donationId?: string;
+  onSuccess?: () => void;
 }
 
-const allowedImageExtension = ['jpg', 'jpeg', 'png'];
-
-const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess }) => {
-  const { donationId: queryDonationId } = useLocalSearchParams<{ donationId?: string }>();
+const AddDonationForm: React.FC<AddDonationFormProps> = ({
+  donationId,
+  onSuccess,
+}) => {
+  const { donationId: queryDonationId } =
+    useLocalSearchParams<{ donationId?: string }>();
   const finalDonationId = donationId || queryDonationId;
 
   const [categoryList, setCategoryList] = useState<Category[]>([]);
@@ -48,13 +52,13 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
   const [description, setDescription] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [category, setCategory] = useState(""); 
-  const [selectedCategory, setSelectedCategory] = useState(""); 
+  const [category, setCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [mode, setMode] = useState("");
   const [address, setAddress] = useState("");
   const [district, setDistrict] = useState("");
   const [createdBy, setCreatedBy] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+  const [image, setImage] = useState<string | null>(null);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
@@ -69,56 +73,79 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
   };
 
   useEffect(() => {
-  const fetchAllCategoriesAndDistricts = async () => {
-    try {
-      const categories = await getAllCategory();
-      const districts = await getAllDistrict();
-      const userId = await getUserId();
+    const fetchAllCategoriesAndDistricts = async () => {
+      try {
+        const categories = await getAllCategory();
+        const districts = await getAllDistrict();
+        const userId = await getUserId();
 
-      setCategoryList(categories.data);
-      setDistrictList(districts.data);
-      setCreatedBy(userId);
+        setCategoryList(categories.data);
+        setDistrictList(districts.data);
+        setCreatedBy(userId);
 
-      if (finalDonationId) {
-        const res = await getDonationByDonationId(finalDonationId); 
-        const d = res;
+        if (finalDonationId) {
+          const res = await getDonationByDonationId(finalDonationId);
+          const d = res;
 
-        setTitle(d.title);
-        setItem(d.item);
-        setQuantity(d.quantity.toString());
-        setDescription(d.description);
-        setName(d.donerName);
-        setPhone(d.donerPhone);
-        setCategory(d.category?.name || "");
-        setSelectedCategory(d.category?.name || "");
-        setMode(d.delivary);
-        setAddress(d.pickupAddress);
-        setDistrict(d.district?._id || "");
-        setImages(d.images || []);
+          setTitle(d.title);
+          setItem(d.item);
+          setQuantity(d.quantity.toString());
+          setDescription(d.description);
+          setName(d.donerName);
+          setPhone(d.donerPhone);
+          setCategory(d.category?.name || "");
+          setSelectedCategory(d.category?.name || "");
+          setMode(d.delivary);
+          setAddress(d.pickupAddress);
+          setDistrict(d.district?._id || "");
+          setImage(d.images?.[0] || null); // Only first image
+        }
+      } catch (error: any) {
+        showAlert(
+          "Failed",
+          error.message || "Failed to fetch categories or donation"
+        );
       }
-    } catch (error: any) {
-      showAlert("Failed", error.message || "Failed to fetch categories or donation");
-    }
-  };
+    };
 
-  fetchAllCategoriesAndDistricts();
-}, [finalDonationId]);
-
+    fetchAllCategoriesAndDistricts();
+  }, [finalDonationId]);
 
   const handlePickerChange = (value: string) => {
     setSelectedCategory(value);
     if (value !== "__custom__") {
       setCategory(value);
     } else {
-      setCategory(""); 
+      setCategory("");
     }
   };
 
   const handleCustomCategoryInput = (text: string) => {
-    setCategory(text.toUpperCase()); 
+    setCategory(text.toUpperCase());
   };
 
-  const handleOnAddDonation = async () => {
+  const pickImage = async () => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 1,
+    base64: false,
+  });
+
+  if (!result.canceled && result.assets.length > 0) {
+    const asset = result.assets[0];
+    console.log("image:", asset.uri);
+    setImage(asset.uri);
+  }
+  };
+
+
+  const removeImage = () => {
+    setImage(null);
+  };
+
+
+const handleOnAddDonation = async () => {
   try {
     const formData = new FormData();
     formData.append("title", title);
@@ -131,62 +158,56 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
     formData.append("delivary", mode);
     formData.append("pickupAddress", address);
     formData.append("district", district);
-    formData.append('createdBy', createdBy);
+    formData.append("createdBy", createdBy);
 
-    images.forEach((uri, index) => {
-      const fileName = uri.split("/").pop() || `image_${index}.jpg`;
-      const fileExtension = fileName.split(".").pop()?.toLowerCase();
-      if (!allowedImageExtension.includes(fileExtension || '')) return;
-      formData.append("images", {
-        uri,
-        name: fileName,
-        type: `image/${fileExtension === "jpg" ? "jpeg" : fileExtension}`,
-      } as any);
-    });
+    if (image) {
+      const fileName = image.split("/").pop() || "image.jpg";
+      const ext = fileName.split(".").pop()?.toLowerCase() || "jpg";
+      const mimeType = `image/${ext === "jpg" ? "jpeg" : ext}`;
+
+      if (Platform.OS === "web") {
+        const res = await fetch(image);
+        const blob = await res.blob();
+        formData.append("image", blob, fileName);
+      } else {
+        formData.append("image", {
+          uri: image,
+          name: fileName,
+          type: mimeType,
+        } as any);
+      }
+    }
+
+    for (let pair of formData.entries()) {
+      if (pair[0] === "image") {
+        console.log(pair[0], pair[1]); 
+      } else {
+        console.log(pair[0], pair[1]);
+      }
+    }
 
     let response;
     if (finalDonationId) {
-        response = await updateDonation(finalDonationId, formData);
-      } else {
-        response = await createDonation(formData);
-      }
-
-      if (response.success) {
-        showAlert("Success", finalDonationId ? response.message || "Donation Updated Successfully!" : response.message || "Donation Created Successfully!");
-        onSuccess && onSuccess();
-        navigate("/profile/userProfile");
-      } else {
-        showAlert("Failed", response.message || "Something went wrong");
-      }
-    } catch (error: any) {
-      showAlert("Error", error.message || "Unexpected error occurred");
+      response = await updateDonation(finalDonationId, formData);
+    } else {
+      response = await createDonation(formData);
     }
+
+    if (response.success) {
+      showAlert("Success", response.message || "Donation Created Successfully!");
+      onSuccess && onSuccess();
+      navigate("/profile/userProfile");
+    } else {
+      showAlert("Failed", response.message || "Something went wrong");
+    }
+  } catch (error: any) {
+    showAlert("Error", error.message || "Unexpected error occurred");
+  }
 };
+
 
   const handleOnCancel = () => {
     // Reset form or navigate
-  };
-
-  const pickImage = async () => {
-    if (images.length >= 2) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-      base64: false,
-      exif: false
-    });
-
-    if (!result.canceled && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      console.log("Picked image URI:", uri);
-      setImages((prev) => [...prev, uri]);
-    }
-  };
-
-  const removeImage = (uri: string) => {
-    setImages((prev) => prev.filter((img) => img !== uri));
   };
 
   return (
@@ -307,21 +328,18 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           </View>
 
           <Text style={{ marginBottom: 5, color: COLORS.textPlaceHolder }}>
-            Upload up to 2 images
+            Upload an image
           </Text>
           <View style={styles.imageContainer}>
-            {images.map((uri, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri }} style={styles.image} />
-                <TouchableOpacity
-                  onPress={() => removeImage(uri)}
-                  style={styles.removeButton}
-                >
+            {image && (
+              <View style={styles.imageWrapper}>
+                <Image source={{ uri: image }} style={styles.image} />
+                <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
                   <Text style={styles.removeButtonText}>X</Text>
                 </TouchableOpacity>
               </View>
-            ))}
-            {images.length < 2 && (
+            )}
+            {!image && (
               <TouchableOpacity onPress={pickImage} style={styles.imageUploadBox}>
                 <Text style={{ color: COLORS.textPlaceHolder, fontSize: 20 }}>+</Text>
               </TouchableOpacity>
@@ -329,6 +347,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           </View>
         </View>
       </ScrollView>
+
       <View style={styles.button}>
         <View style={styles.halfItem}>
           <SubmitButton
@@ -345,6 +364,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
           />
         </View>
       </View>
+
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}
@@ -355,39 +375,21 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({ donationId, onSuccess
   );
 };
 
+export default AddDonationForm;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 15,
-    justifyContent: "flex-start",
-  },
-  itemContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  halfItem: {
-    width: "48%",
-  },
+  container: { flex: 1, padding: 15, justifyContent: "flex-start" },
+  itemContainer: { flexDirection: "row", justifyContent: "space-between" },
+  halfItem: { width: "48%" },
   button: {
     marginTop: 20,
     marginBottom: 10,
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  imageContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginVertical: 10,
-    gap: 10,
-  },
-  imageWrapper: {
-    position: "relative",
-  },
-  image: {
-    width: 70,
-    height: 70,
-    borderRadius: SIZE.buttonRadiusSmall,
-  },
+  imageContainer: { flexDirection: "row", flexWrap: "wrap", marginVertical: 10, gap: 10 },
+  imageWrapper: { position: "relative" },
+  image: { width: 70, height: 70, borderRadius: SIZE.buttonRadiusSmall },
   removeButton: {
     position: "absolute",
     top: -6,
@@ -399,11 +401,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  removeButtonText: {
-    color: COLORS.white,
-    fontWeight: "bold",
-    fontSize: 12,
-  },
+  removeButtonText: { color: COLORS.white, fontWeight: "bold", fontSize: 12 },
   imageUploadBox: {
     width: 70,
     height: 70,
@@ -414,43 +412,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: COLORS.white,
   },
-  radioLabel: {
-  marginTop: 10,
-  marginBottom: 5,
-  color: COLORS.textPlaceHolder,
-  },
-  radioGroup: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 10,
-    gap: 10,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 15,
-  },
-  radioCircle: {
-    height: 18,
-    width: 18,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: COLORS.textHighlight,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 6,
-  },
-  radioDot: {
-    height: 8,
-    width: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.textHighlight,
-  },
-  radioText: {
-    fontSize: 14,
-    color: COLORS.textDark,
-  },
-
+  radioLabel: { marginTop: 10, marginBottom: 5, color: COLORS.textPlaceHolder },
+  radioGroup: { flexDirection: "row", flexWrap: "wrap", marginBottom: 10, gap: 10 },
+  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 15, }, 
+  radioCircle: { height: 18, width: 18, borderRadius: 9, borderWidth: 1, borderColor: COLORS.textHighlight, alignItems: "center", justifyContent: "center", marginRight: 6, }, 
+  radioDot: { height: 8, width: 8, borderRadius: 4, backgroundColor: COLORS.textHighlight, }, 
+  radioText: { fontSize: 14, color: COLORS.textDark, }, 
 });
-
-export default AddDonationForm;

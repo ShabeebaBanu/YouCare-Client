@@ -138,7 +138,7 @@ export default function UserProfile() {
             title={item.title}
             updatedAt={item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
             status={item.status}
-            imageUrl={item.images?.[0] || "https://via.placeholder.com/60"}
+            imageUrl={item.image}
             onView={() => handleOnView(activeTab, item._id)}
             onEdit={() => handleOnEdit(activeTab, item._id)}
             onDelete={() => handleDeletePress(activeTab, item._id)}

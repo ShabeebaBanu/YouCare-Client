@@ -7,18 +7,24 @@ interface SendRequestProps {
   title: string;
   name: string;
   date: string;
-  onPress?: () => void;
+  onPress?: () => void;        // for card press
+  onCancel?: () => void;       // for cancel button
 }
 
 const SendRequestCard: React.FC<SendRequestProps> = ({
   title,
   name,
   date,
-  onPress
+  onPress,
+  onCancel
 }) => {
 
   const handleOnPress = () => {
     if (onPress) onPress();
+  };
+
+  const handleOnCancel = () => {
+    if (onCancel) onCancel();
   };
 
   return (
@@ -35,9 +41,12 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
       {/* Third Row: Name */}
       <Text style={styles.name}>{name}</Text>
 
-      {/* Date at Bottom Right */}
-      <View style={styles.dateContainer}>
+      {/* Bottom Row: Date + Cancel Button */}
+      <View style={styles.bottomRow}>
         <Text style={styles.date}>{date}</Text>
+        <TouchableOpacity style={styles.cancelButton} onPress={handleOnCancel}>
+          <Text style={styles.cancelText}>Cancel</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -76,11 +85,24 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginBottom: 8,
   },
-  dateContainer: {
-    alignItems: 'flex-end',
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   date: {
     fontSize: 11,
     color: COLORS.textOption,
+  },
+  cancelButton: {
+    backgroundColor: COLORS.textgray,  
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  cancelText: {
+    color: COLORS.white,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

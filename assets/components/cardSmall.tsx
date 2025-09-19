@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   },
   iconBox: {
     borderWidth: 1,
-    borderColor: COLORS.bgGray,
+    borderColor: COLORS.bgblue,
     borderRadius: 8,
     padding: 6,
     backgroundColor: COLORS.white,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   textBox: {
     borderWidth: 1,
-    borderColor: COLORS.bgGray,
+    borderColor: COLORS.bgblue,
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
