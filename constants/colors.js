@@ -3,6 +3,8 @@ const COLORS = {
     bgDark: "#172D44",
     bgGray: "#EDF0F3",
     bgblue: "#78A5C8",
+    bgGreen: "#dcf8dcff",
+    bgRed: "#f7d4d4ff",
 
     textDark: "#172D44",
     textLight: "#d4e8f7ca",

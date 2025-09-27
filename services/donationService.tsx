@@ -23,6 +23,8 @@ export type Donation = {
     name: string;
     province: string;
   };
+  likes?: number;
+  views?: number;
   userType: string;
   delivary?: string;
   createdBy?: string;
@@ -97,7 +99,7 @@ export const updateDonation = async (donationId: any, updatedDonation: any) => {
     try {
         const response = await axios.put(`${API}/api/donation/${donationId}`, updatedDonation, {
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "multipart/form-data"
             }
         });
         console.log("response: ", response);

@@ -5,7 +5,9 @@ import Footer from '../../assets/components/footer'
 import CardMain from '../../assets/components/cardMain'
 import { navigate } from "../../navigation/globalNavigation";
 
+
 export default function Home() {
+
     const handleOnNeed = () => {
         navigate('/need/needList')
     };

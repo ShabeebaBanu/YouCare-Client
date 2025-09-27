@@ -80,7 +80,8 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
 
         if (finalNeedId) {
           setIsEdit(true);
-          const existingNeed = await getNeedByNeedId(finalNeedId);
+          const existingData = await getNeedByNeedId(finalNeedId);
+          const existingNeed = existingData.data;
 
           setTitle(existingNeed.title || "");
           setItem(existingNeed.item || "");
@@ -89,11 +90,11 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
           setName(existingNeed.needyName || "");
           setPhone(existingNeed.needyPhone || "");
           setCategory(existingNeed.category || "");
-          setSelectedCategory(existingNeed.category || "");
+          setSelectedCategory(existingNeed.category?.name || "");
           setMode(existingNeed.delivary || "");
           setAddress(existingNeed.delivaryAddress || "");
-          setDistrict(existingNeed.district || "");
-          setImage(existingNeed.images?.[0] || null); 
+          setDistrict(existingNeed.district?._id || "");
+          setImage(existingNeed.image || null); 
         }
       } catch (error: any) {
         showAlert("Error", error?.message || "Failed to fetch categories or need data");

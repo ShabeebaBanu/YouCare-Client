@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TouchableOpacity,
   StyleSheet,
@@ -11,9 +11,49 @@ import { MaterialIcons, Feather } from "@expo/vector-icons";
 import SIZE from "@/constants/size";
 import COLORS from "@/constants/colors";
 import { navigate } from "../../navigation/globalNavigation";
+import { getUnreadNotificationCountByUserId } from "@/services/notificationService";
+import { getUserId } from "@/constants/config";
+import { useRouter } from "expo-router";
 
 const Footer = () => {
+  const router = useRouter();
+
   const [showOptions, setShowOptions] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [unreadWishlist, setUnreadWishlist] = useState(0);
+  const [unreadRequest, setUnreadRequest] = useState(0);
+  const [userId, setUserId] = useState("");
+
+  // Format notification count
+  const formatCount = (count: number) => {
+    if (count > 999) return "999+";
+    if (count > 99) return "99+";
+    return count.toString();
+  };
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const id = await getUserId();
+        setUserId(id);
+
+        const response = await getUnreadNotificationCountByUserId(id);
+        const totalUnread = response.data.totalCount;
+
+        if (totalUnread > 0) {
+          setNotificationCount(totalUnread);
+          setUnreadWishlist(response.data.wishListCount);
+          setUnreadRequest(response.data.requestCount);
+        } else {
+          setNotificationCount(0);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notification count:", error);
+      }
+    };
+
+    fetchNotificationCount();
+  }, []);
 
   const handleOnHome = () => {
     navigate("/home/home");
@@ -24,7 +64,13 @@ const Footer = () => {
   };
 
   const handleOnNotification = () => {
-    navigate("/notification/notification"); 
+    router.push({
+      pathname: "/notification/notification",
+      params: {
+        wishListCount: unreadWishlist,
+        donationCount: unreadRequest,
+      },
+    });
   };
 
   const handleOnProfile = () => {
@@ -40,9 +86,6 @@ const Footer = () => {
       case "need":
         navigate("/need/addNeed");
         break;
-      // case "volunteer":
-      //   navigate("/volunteer/register");
-      //   break;
       default:
         break;
     }
@@ -62,6 +105,17 @@ const Footer = () => {
 
         <TouchableOpacity onPress={handleOnNotification} style={styles.iconWrapper}>
           <Feather name="bell" style={styles.icon} />
+
+          {notificationCount > 0 && (
+            <View
+              style={[
+                styles.badge,
+                notificationCount > 99 && styles.badgeLarge,
+              ]}
+            >
+              <Text style={styles.badgeText}>{formatCount(notificationCount)}</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleOnProfile} style={styles.iconWrapper}>
@@ -87,13 +141,6 @@ const Footer = () => {
               >
                 <Text style={styles.optionText}>Need</Text>
               </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                style={styles.optionButton}
-                onPress={() => handleOptionSelect("volunteer")}
-              >
-                <Text style={styles.optionText}>Volunteer</Text>
-              </TouchableOpacity> */}
             </View>
           </View>
         </TouchableWithoutFeedback>
@@ -101,6 +148,8 @@ const Footer = () => {
     </>
   );
 };
+
+export default Footer;
 
 const styles = StyleSheet.create({
   container: {
@@ -111,13 +160,43 @@ const styles = StyleSheet.create({
     paddingVertical: SIZE.VerticlePaddingMedium,
     backgroundColor: COLORS.bgDark,
   },
+  iconWrapper: {
+    flex: 1,
+    alignItems: "center",
+    position: "relative",
+  },
   icon: {
     color: COLORS.white,
     fontSize: SIZE.iconSize,
   },
-  iconWrapper: {
-    flex: 1,
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: 12,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: COLORS.textHighlight,
+    justifyContent: "center",
     alignItems: "center",
+    paddingHorizontal: 4,
+    //borderWidth: 1,
+    //borderColor: COLORS.bgGray,
+    shadowColor: '#ecececdd',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  badgeLarge: {
+    minWidth: 26,
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+    textAlign: "center",
   },
   modalOverlay: {
     flex: 1,
@@ -142,5 +221,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-
-export default Footer;

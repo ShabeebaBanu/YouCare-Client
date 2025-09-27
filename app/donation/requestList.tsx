@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router"; 
 import COLORS from "@/constants/colors";
 import SIZE from "@/constants/size";
 import STYLES from "@/constants/common.style";
@@ -16,6 +15,7 @@ import Footer from "@/assets/components/footer";
 import { getDonationByDonationId } from "@/services/donationService";
 import { getDonationRequestByDonationId } from "@/services/donationRequestService";
 import CustomAlert from "@/constants/customAlert";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 function RequestList() {
   const router = useRouter();
@@ -86,10 +86,10 @@ function RequestList() {
     );
   }
 
-  const handleOnView = (userId: string) => {
+  const handleOnView = (userId: string, requestId: string) => {
     router.push({
       pathname: "/need/publicProfile",
-      params: { userId, donationId }
+      params: { userId, donationId, requestId }
     });
   };
 
@@ -125,7 +125,7 @@ function RequestList() {
             userType={req.needyDetails.userType}
             district={req.needyDetails.district}
             date={formatDateTime(req.donationRequestDetail.updatedAt)}
-            onView={() => handleOnView(req.needyDetails.id)}
+            onView={() => handleOnView(req.needyDetails.id, req.donationRequestDetail.id)}
           />
         ))}
       </ScrollView>

@@ -38,6 +38,15 @@ export const getDonationRequestByUserId = async (userId: any) => {
     }
 };
 
+export const getDonationRequestDetailsByDonationRequestId = async (donationRequestId: any) => {
+    try {
+        const response = await axios.get(`${API}/api/request/detail/${donationRequestId}`);
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Get Donation Request By Donation");
+    }
+}
+
 export const getDonationRequestByDonationId = async (donationId: any) => {
     try {
         const response = await axios.get(`${API}/api/request/donation/${donationId}`);
@@ -53,6 +62,15 @@ export const confirmDonation = async (donationRequestId: any) => {
         return response.data;
     } catch (error) {
         handleApiError(error, "Confirm Donation");
+    }
+}
+
+export const rejectDonation = async (donationRequestId: any) => {
+    try {
+        const response = await axios.put(`${API}/api/request/reject/${donationRequestId}`);
+        return response.data;
+    } catch (error) {
+        handleApiError(error, "Reject Donation");
     }
 }
 

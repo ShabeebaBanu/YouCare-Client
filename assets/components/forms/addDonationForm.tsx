@@ -85,11 +85,11 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({
 
         if (finalDonationId) {
           const res = await getDonationByDonationId(finalDonationId);
-          const d = res;
+          const d = res.data;
 
           setTitle(d.title);
           setItem(d.item);
-          setQuantity(d.quantity.toString());
+          setQuantity(d.quantity);
           setDescription(d.description);
           setName(d.donerName);
           setPhone(d.donerPhone);
@@ -98,7 +98,7 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({
           setMode(d.delivary);
           setAddress(d.pickupAddress);
           setDistrict(d.district?._id || "");
-          setImage(d.images?.[0] || null); // Only first image
+          setImage(d.image || null); 
         }
       } catch (error: any) {
         showAlert(

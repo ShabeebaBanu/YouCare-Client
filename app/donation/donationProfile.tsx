@@ -6,10 +6,13 @@ import DonationDetail from "@/assets/components/donationDetail";
 import { useLocalSearchParams } from "expo-router";
 import { getDonationByDonationId, Donation } from "../../services/donationService";
 import { useEffect, useState } from "react";
+import { createReview } from "@/services/reviewService";
+import { getUserId } from "@/constants/config";
 import CustomAlert from "@/constants/customAlert";
 
 export default function DonationProfile() {
   const { id } = useLocalSearchParams();
+  const [userId, setUserId] = useState("");
   const [donation, setDonation] = useState<Donation | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,10 +30,19 @@ export default function DonationProfile() {
     const fetchDonation = async () => {
       try {
         const response = await getDonationByDonationId(id as string);
+        const user = await getUserId();
         if (!response.data) {
           showAlert("Not Found", "Donation not found.");
         } else {
           setDonation(response.data);
+          setUserId(user);
+          await createReview({
+            isLiked: false,
+            isViewed: true,
+            postId: response.data._id,
+            createdBy: user,   
+            postType: "Donation",
+          });
         }
       } catch (error: any) {
         showAlert("Error", error.message || "Failed to fetch Donation details.");
@@ -58,6 +70,19 @@ export default function DonationProfile() {
     );
   }
 
+  const maskPhone = (phone: string) => {
+    if (!phone) return "";
+    return phone.slice(0, -3).replace(/\d/g, "* ") + phone.slice(-3);
+  };
+
+  const maskAddress = (address: string) => {
+    if (!address) return "";
+    return address.length > 10
+      ? address.slice(0, 10) + "..."
+      : address;
+  };
+
+
   return (
     <View style={STYLES.container}>
       <DonationDetail
@@ -65,11 +90,15 @@ export default function DonationProfile() {
         title={donation.title}
         name={donation.donerName ?? ""}
         type={donation.userType ?? ""}
-        address={donation.pickupAddress ?? ""}
-        phone={donation.donerPhone ?? ""}
+        address={maskAddress(donation.pickupAddress ?? "")}
+        phone={maskPhone(donation.donerPhone ?? "")}
         description={donation.description ?? ""}
         quantity={donation.quantity ?? 0}
         image={donation.image ?? ""}
+        likes={donation.likes ?? 0}
+        views={donation.views ?? 0}
+        createdBy={userId}
+        donationId={donation._id}
       />
       <Footer />
 

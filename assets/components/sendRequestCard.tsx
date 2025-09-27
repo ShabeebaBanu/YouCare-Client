@@ -7,8 +7,10 @@ interface SendRequestProps {
   title: string;
   name: string;
   date: string;
-  onPress?: () => void;        // for card press
-  onCancel?: () => void;       // for cancel button
+  onPress?: () => void;        
+  onCancel?: () => void;  
+  status?: "PENDING" | "ACCEPTED" | "REJECTED" | "DELIVERED";   
+  requestType?: "Donation" | "Need"; 
 }
 
 const SendRequestCard: React.FC<SendRequestProps> = ({
@@ -16,7 +18,9 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
   name,
   date,
   onPress,
-  onCancel
+  onCancel,
+  status = "PENDING",
+  requestType = "Donation",
 }) => {
 
   const handleOnPress = () => {
@@ -27,12 +31,45 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
     if (onCancel) onCancel();
   };
 
+  // Default values
+  let heading = "Donation Request Sent";
+  let icon = <Ionicons name="time-outline" size={20} color={COLORS.bgblue} />;
+  let cardStyle = [styles.card, { backgroundColor: COLORS.bgLight }];
+  let showCancel = true;
+  let statusLabel: string | null = null;
+  let statusBg: string | null = null;
+
+  if (requestType === "Donation") {
+    if (status === "ACCEPTED") {
+      heading = "Donation Request Accepted";
+      icon = <Ionicons name="checkmark-circle" size={22} color={COLORS.buttonAccept} />;
+      cardStyle = [styles.card, { backgroundColor: COLORS.bgGreen }];
+      showCancel = false;
+    } else if (status === "REJECTED") {
+      heading = "Donation Request Rejected";
+      icon = <Ionicons name="close-circle" size={22} color={COLORS.buttonReject} />;
+      cardStyle = [styles.card, { backgroundColor: COLORS.bgRed }];
+      showCancel = false;
+    }
+  } else if (requestType === "Need") {
+    heading = "Need Approval Request Send";
+    showCancel = false;
+
+    if (status === "ACCEPTED") {
+      statusLabel = "Accepted";
+      statusBg = null; 
+    } else if (status === "DELIVERED") {
+      statusLabel = "Delivered";
+      statusBg = "green";
+    }
+  }
+
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={handleOnPress}>
-      {/* Top Row: Heading + Tick Icon */}
+    <TouchableOpacity style={cardStyle} activeOpacity={0.9} onPress={handleOnPress}>
+      {/* Top Row: Heading + Icon */}
       <View style={styles.headerRow}>
-        <Text style={styles.heading}>Donation Request Sent</Text>
-        <Ionicons name="checkmark-circle" size={20} color={COLORS.bgblue} />
+        <Text style={styles.heading}>{heading}</Text>
+        {icon}
       </View>
 
       {/* Second Row: Title */}
@@ -41,12 +78,21 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
       {/* Third Row: Name */}
       <Text style={styles.name}>{name}</Text>
 
-      {/* Bottom Row: Date + Cancel Button */}
+      {/* Bottom Row: Date + Cancel or Status */}
       <View style={styles.bottomRow}>
         <Text style={styles.date}>{date}</Text>
-        <TouchableOpacity style={styles.cancelButton} onPress={handleOnCancel}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </TouchableOpacity>
+
+        {requestType === "Need" && statusLabel && (
+          <View style={[styles.badge, statusBg ? { backgroundColor: statusBg } : {}]}>
+            <Text style={styles.badgeText}>{statusLabel}</Text>
+          </View>
+        )}
+
+        {requestType === "Donation" && showCancel && (
+          <TouchableOpacity style={styles.cancelButton} onPress={handleOnCancel}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -56,12 +102,16 @@ export default SendRequestCard;
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.bgLight,
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
     marginVertical: 10,
     borderWidth: 1,
     borderColor: COLORS.bgGray,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   headerRow: {
     flexDirection: 'row',
@@ -82,7 +132,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 12,
-    color: COLORS.textLight,
+    color: COLORS.textHighlight,
     marginBottom: 8,
   },
   bottomRow: {
@@ -104,5 +154,15 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: 12,
     fontWeight: '500',
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 11,
+    color: COLORS.white,
+    fontWeight: "600",
   },
 });

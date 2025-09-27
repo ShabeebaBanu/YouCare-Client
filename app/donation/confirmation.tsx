@@ -7,12 +7,15 @@ import SIZE from "@/constants/size";
 import CustomButtonSmall from "@/assets/components/customButtonSmall";
 import Footer from "@/assets/components/footer";
 
-import { getDonationRequestByDonationId, confirmDonation } from "@/services/donationRequestService";
+import { getDonationRequestDetailsByDonationRequestId, confirmDonation } from "@/services/donationRequestService";
+import { getApproveNeedDetailsByNeedId, createApproveNeed } from "@/services/approveNeedService";
 import CustomAlert from "@/constants/customAlert";
 
 const Confirmation: React.FC = () => {
   const router = useRouter();
-  const { donationId } = useLocalSearchParams();
+  const { donationRequestId } = useLocalSearchParams();
+  const { needId } = useLocalSearchParams();
+  const { userId } = useLocalSearchParams();
   const [donor, setDonor] = useState<any>(null);
   const [beneficiary, setBeneficiary] = useState<any>(null);
   const [donation, setDonation] = useState<any>(null);
@@ -30,44 +33,70 @@ const Confirmation: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const response = await getDonationRequestByDonationId(donationId);
-        if (!response?.data || response.data.length === 0) {
-          showAlert("Not Found", "No donation requests found for this donation.");
-          return;
-        }
-        const firstRequest = response.data[0];
-        setDonation(firstRequest.donationDetail);
-        setDonor(firstRequest.donorDetails);
-        setBeneficiary(firstRequest.needyDetails);
-        setDonationRequest(firstRequest.donationRequestDetail);
-      } catch (error: any) {
-        showAlert("Error", error.message || "Failed to fetch confirmation data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (donationId) fetchData();
-  }, [donationId]);
-
-  const handleConfirm = async () => {
+  const fetchData = async () => {
     try {
+      setLoading(true);
+
+      let response: any;
+
+      if (donationRequestId) {
+        response = await getDonationRequestDetailsByDonationRequestId(donationRequestId);
+        setDonationRequest(response.data.donationRequestDetail);
+      } else if (needId && userId) {
+        response = await getApproveNeedDetailsByNeedId(needId, userId);
+      }
+
+      if (!response?.data) {
+        showAlert("Not Found", "No donation requests found.");
+        return;
+      }
+
+      const firstRequest = response.data;
+      setDonation(firstRequest.donationDetail);
+      setDonor(firstRequest.donorDetails);
+      setBeneficiary(firstRequest.needyDetails);
+
+    } catch (error: any) {
+      showAlert("Error", error.message || "Failed to fetch confirmation data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (donationRequestId || needId) fetchData();
+}, [donationRequestId, needId]);
+
+const handleConfirm = async () => {
+  try {
+    if (donationRequestId) {
       if (!donationRequest?.id) {
         showAlert("Error", "No donation request available to confirm.");
         return;
       }
+   
       await confirmDonation(donationRequest.id);
-      showAlert("Success", "Donation confirmed successfully!");
-      setTimeout(() => {
-        router.push("/home/home");
-      }, 1000);
-    } catch (error: any) {
-      showAlert("Error", error?.message || "Failed to confirm donation");
+      showAlert("Success", "Donation request confirmed successfully!");
+    } 
+    else if (needId && userId) {
+      await createApproveNeed({
+        needId: needId,
+        userId: userId
+      });   
+      showAlert("Success", "Need Approved successfully!");
+    } 
+    else {
+      showAlert("Error", "No valid confirmation data found.");
+      return;
     }
-  };
+
+    setTimeout(() => {
+      router.push("/home/home");
+    }, 1000);
+  } catch (error: any) {
+    showAlert("Error", error?.message || "Failed to confirm donation");
+  }
+};
+
 
   if (loading) {
     return (

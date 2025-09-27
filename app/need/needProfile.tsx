@@ -6,10 +6,14 @@ import NeedDetail from '../../assets/components/needDetail'
 import { useLocalSearchParams } from "expo-router";
 import { getNeedByNeedId, Need } from '../../services/needService'
 import { useEffect, useState } from 'react';
+import { createReview } from '@/services/reviewService'
+import { getUserId } from '@/constants/config'
 import CustomAlert from '@/constants/customAlert';
+
 
 export default function NeedProfile() {
   const { id } = useLocalSearchParams();
+  const [userId, setUserId] = useState("");
   const [need, setNeed] = useState<Need | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,12 +26,21 @@ export default function NeedProfile() {
     const fetchNeed = async () => {
       try {
         const response = await getNeedByNeedId(id as string);
+        const user = await getUserId();
         if (!response?.data) {
           setAlertTitle("Not Found");
           setAlertMessage(response?.message || "The requested need could not be found.");
           setAlertVisible(true);
         } else {
           setNeed(response.data);
+          setUserId(user);
+          await createReview({
+            isLiked: false,
+            isViewed: true,
+            postId: response.data._id,
+            createdBy: user,   
+            postType: "Need",
+          });
         }
       } catch (error: any) {
         setAlertTitle("Error");
@@ -62,6 +75,10 @@ export default function NeedProfile() {
           description={need.description ?? ""}
           quantity={need.quantity ?? 0}
           image={need.image ?? ""}
+          likes={need.likes ?? 0}
+          views={need.views ?? 0}
+          createdBy={userId}
+          needId={need._id}
         />
       )}
       <Footer />

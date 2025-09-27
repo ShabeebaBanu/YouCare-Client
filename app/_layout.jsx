@@ -27,6 +27,7 @@ export default function RootLayout() {
     <Stack.Screen name="need/needProfile" />
     <Stack.Screen name="need/publicProfile" />
     <Stack.Screen name="profile/userProfile" />
+    <Stack.Screen name="profile/completeDetail" />
     <Stack.Screen name="donation/donationList" />
     <Stack.Screen name="donation/donationProfile" />
     <Stack.Screen name="donation/confirmation" />

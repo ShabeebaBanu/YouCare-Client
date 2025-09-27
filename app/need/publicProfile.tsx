@@ -19,13 +19,16 @@ import Footer from "@/assets/components/footer";
 import { getUserById } from "@/services/userService";
 import { getNeedByCreatedBy } from "@/services/needService";
 import { getDonationByCreatedBy } from "@/services/donationService";
+import { rejectDonation } from "@/services/donationRequestService";
 import CustomButtonSmall from "@/assets/components/customButtonSmall";
 import CustomAlert from "@/constants/customAlert";
 
 const PublicProfile: React.FC = () => {
   const router = useRouter();
   const { userId } = useLocalSearchParams();
+  const { requestType } = useLocalSearchParams();
   const { donationId } = useLocalSearchParams();
+  const { requestId } = useLocalSearchParams();
 
   const [user, setUser] = useState<any>(null);
   const [needs, setNeeds] = useState<any[]>([]);
@@ -65,17 +68,22 @@ const PublicProfile: React.FC = () => {
   }, [userId]);
 
   const handleOnAccept = () => {
-    const donationIdStr = Array.isArray(donationId)
-      ? donationId[0]
-      : donationId ?? "";
-    router.push(`/donation/confirmation?donationId=${donationIdStr}`);
+    console.log("requestId : ", requestId);
+    router.push(`/donation/confirmation?donationRequestId=${requestId}`);
   };
 
-  const handleOnReject = () => {
+  const handleOnReject = async () => {
     setAlertTitle("Reject Request");
     setAlertMessage("Are you sure you want to reject this request?");
-    setAlertConfirm(() => () => {
-    setAlertVisible(false);
+    setAlertConfirm(() => async () => {
+      try {
+        await rejectDonation(requestId);
+        router.push("/home/home");
+      } catch (error: any) {
+        console.error(error?.message || "Error rejecting request:");
+      } finally {
+        setAlertVisible(false);
+      }
     });
     setAlertVisible(true);
   };
@@ -126,19 +134,20 @@ const PublicProfile: React.FC = () => {
       </LinearGradient>
       </View>
 
-
-      <View style={styles.actionButtons}>
-        <CustomButtonSmall
-          title="Accept Request"
-          onPress={() => handleOnAccept()}
-          buttonColor={COLORS.buttonOther}
-        />
-        <CustomButtonSmall
-          title="Reject Request"
-          onPress={handleOnReject}
-          buttonColor={COLORS.buttonReject}
-        />
-      </View>
+      {requestType === "Donation" && (
+        <View style={styles.actionButtons}>
+          <CustomButtonSmall
+            title="Accept Request"
+            onPress={() => handleOnAccept()}
+            buttonColor={COLORS.buttonOther}
+          />
+          <CustomButtonSmall
+            title="Reject Request"
+            onPress={handleOnReject}
+            buttonColor={COLORS.buttonReject}
+          />
+        </View>
+      )}
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

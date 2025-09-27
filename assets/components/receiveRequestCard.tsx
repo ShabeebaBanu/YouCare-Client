@@ -9,6 +9,8 @@ interface ReceiveRequestProps {
   date: string;
   imageUrl?: any;
   onPress?: () => void;
+  status?: string; 
+  requestType?: "Donation" | "Need";
 }
 
 const ReceiveRequestCard: React.FC<ReceiveRequestProps> = ({
@@ -16,17 +18,77 @@ const ReceiveRequestCard: React.FC<ReceiveRequestProps> = ({
   name,
   date,
   imageUrl,
-  onPress
+  onPress,
+  status,
+  requestType = "Donation",
 }) => {
 
   const handleOnPress = () => {
     if (onPress) onPress();
   };
 
+  const renderStatusBadge = () => {
+    if (requestType === "Donation") {
+      if (status === "ACCEPTED") {
+        return (
+          <View style={[styles.badge, { backgroundColor: COLORS.buttonAccept }]}>
+            <Text style={styles.badgeText}>You Accepted</Text>
+          </View>
+        );
+      }
+      if (status === "REJECTED") {
+        return (
+          <View style={[styles.badge, { backgroundColor: COLORS.buttonReject }]}>
+            <Text style={styles.badgeText}>You Rejected</Text>
+          </View>
+        );
+      }
+    } else if (requestType === "Need") {
+      if (status === "ACCEPTED") {
+        return (
+          <View style={[styles.badge, { backgroundColor: COLORS.buttonAccept }]}>
+            <Text style={styles.badgeText}>Accepted</Text>
+          </View>
+        );
+      }
+      if (status === "DELIVERED") {
+        return (
+          <View style={[styles.badge, { backgroundColor: "green" }]}>
+            <Text style={styles.badgeText}>Delivered</Text>
+          </View>
+        );
+      }
+    }
+    return null; 
+  };
+
+  const renderContent = () => {
+    if (requestType === "Donation") {
+      return (
+        <Text style={styles.titleText}>
+          <Text style={styles.titleBold}>{title} </Text>
+          {status === "PENDING" && (
+            <Text style={styles.titleNormal}>has a new Request {name}</Text>
+          )}
+        </Text>
+      );
+    }
+
+    if (requestType === "Need") {
+      return (
+        <Text style={styles.titleText}>
+          <Text style={styles.titleBold}>{title} </Text>
+          <Text style={styles.titleNormal}>
+            is ready to be donated by a donor
+          </Text>
+        </Text>
+      );
+    }
+  };
+
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={handleOnPress}>
       <View style={styles.row}>
-        {/* Left Image Box */}
         <View style={styles.imageBox}>
           {imageUrl ? (
             <Image source={imageUrl} style={styles.image} />
@@ -35,18 +97,11 @@ const ReceiveRequestCard: React.FC<ReceiveRequestProps> = ({
           )}
         </View>
 
-        {/* Right Content */}
         <View style={styles.content}>
-          {/* Title Line */}
-          <Text style={styles.titleText}>
-            <Text style={styles.titleBold}>{title} </Text>
-            <Text style={styles.titleNormal}>has a new Request</Text>
-            <Text style={styles.titleNormal}>{name}</Text>
-          </Text>
-
-          {/* Date at bottom-right */}
-          <View style={styles.dateContainer}>
+          {renderContent()}
+          <View style={styles.footerRow}>
             <Text style={styles.date}>{date}</Text>
+            {renderStatusBadge()}
           </View>
         </View>
       </View>
@@ -101,11 +156,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.textDark,
   },
-  dateContainer: {
-    alignItems: 'flex-end',
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   date: {
     fontSize: 11,
     color: COLORS.textOption,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 11,
+    color: COLORS.white,
+    fontWeight: "600",
   },
 });

@@ -6,7 +6,7 @@ import Footer from '../../assets/components/footer';
 import HeaderProfile from '../../assets/components/headerProfile';
 import ProfileForm from '../../assets/components/forms/profileForm';
 import CardSmall from '../../assets/components/cardSmall';
-import { getUserId } from "../../constants/config";
+import { getUserId, clearAccessToken } from "../../constants/config";
 import { getUserById } from "../../services/userService";
 import { getNeedByCreatedBy, deleteNeed } from '@/services/needService';
 import { getDonationByCreatedBy, deleteDonation } from '@/services/donationService';
@@ -101,6 +101,14 @@ export default function UserProfile() {
     else if (active === "Donation") router.push(`/donation/donationProfile?id=${id}`);
   };
 
+  const handleOnViewCompletedDonationDetail = (id: string, type: string) => {
+   router.push(`/profile/completeDetail?id=${id}&type=${type}`);
+  };
+
+  const handleOnViewCompletedNeedDetail = (id: string, type: string) => {
+   router.push(`/profile/completeDetail?id=${id}&type=${type}`);
+  };
+
   const handleOnEdit = (active: string, id: string) => {
     if (active === "Need") {
       router.push(`/need/addNeed?needId=${id}`);
@@ -113,6 +121,11 @@ export default function UserProfile() {
     router.push(`/donation/requestList?donationId=${id}`);
   };
 
+  const handleOnLogout = async () => {
+    await clearAccessToken();
+    router.push("/auth/login");
+  };
+
   if (!user) return null;
 
   return (
@@ -121,6 +134,7 @@ export default function UserProfile() {
         name={user.username}
         userType={user.userType}
         onTabPress={(tab) => setActiveTab(tab)}
+        onLogout={handleOnLogout}
       />
 
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -144,6 +158,8 @@ export default function UserProfile() {
             onDelete={() => handleDeletePress(activeTab, item._id)}
             activeTab={activeTab}
             onRequests={() => handleOnRequests(item._id)}
+            onViewDonationDetails={() => handleOnViewCompletedDonationDetail(item._id, "Donation")}
+            onViewNeedDetails={() => handleOnViewCompletedNeedDetail(item._id, "Need")}
           />
         ))}
       </ScrollView>

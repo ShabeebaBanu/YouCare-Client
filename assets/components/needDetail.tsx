@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,12 +6,16 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import COLORS from '../../constants/colors';
 import STYLES from '@/constants/common.style';
 import SIZE from '../../constants/size';
 import SubmitButton from './submitButton';
 import { FontAwesome } from '@expo/vector-icons';
+import { getReviewByCreatedByAndPostId, updateReview } from '@/services/reviewService';
+import { useRouter } from 'expo-router';
+import { getUserId } from '@/constants/config';
 
 interface DetailProps {
   title: string;
@@ -21,8 +25,12 @@ interface DetailProps {
   phone: string;
   description: string;
   quantity: number;
-  image: string; // single image URI
-  profileImage?: string; // optional dynamic profile image
+  image: string;
+  profileImage?: string;
+  views?: number;
+  likes?: number;
+  needId: string;
+  createdBy: string; 
 }
 
 const NeedDetail: React.FC<DetailProps> = ({
@@ -35,13 +43,61 @@ const NeedDetail: React.FC<DetailProps> = ({
   quantity,
   image,
   profileImage,
+  views,
+  likes,
+  needId,
+  createdBy,
 }) => {
-  const handleOnDonate = () => {
-    // navigate('');
+  const router = useRouter();
+  const [isLiked, setIsLiked] = useState(false);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      try {
+        const response = await getReviewByCreatedByAndPostId(createdBy, needId);
+        console.log("existing :", response);
+        if (response?.data) {
+          setIsLiked(response.data.isLiked || false);
+          setReviewId(response.data._id);
+        }
+      } catch (error) {
+        console.log("Error fetching review: ", error);
+      }
+    };
+    fetchReview();
+  }, [createdBy, needId]);
+
+  const handleOnDonate = async (needId: string) => {
+    const userId = await getUserId();
+    router.push(`/donation/confirmation?needId=${needId}&userId=${userId}`);
   };
 
   const handleOnAddToWishList = () => {
     // navigate('');
+  };
+
+  const handleLike = async () => {
+    try {
+      console.log("review id: ", reviewId);
+      if (!reviewId) return; 
+
+      const body = {
+        isLiked: isLiked ? false : true,
+        isViewed: true,
+        postId: needId,
+        createdBy: createdBy,
+        postType: "Need",
+      };
+
+      const response = await updateReview(reviewId, body);
+      console.log("update response: ", response);
+      if (response?.data) {
+        setIsLiked(response.data.isLiked);
+      }
+    } catch (error) {
+      console.log("Error updating review: ", error);
+    }
   };
 
   return (
@@ -56,13 +112,19 @@ const NeedDetail: React.FC<DetailProps> = ({
         <View style={styles.content}>
           <View style={styles.iconsTopRight}>
             <View style={styles.iconWithText}>
-              <FontAwesome name="eye" size={16} color={COLORS.textDark} />
-              <Text style={styles.iconText}>256</Text>
+              <FontAwesome name="eye" size={16} color={COLORS.textgray} />
+              <Text style={styles.iconText}>{views}</Text>
             </View>
-            <View style={styles.iconWithText}>
-              <FontAwesome name="heart" size={16} color="red" />
-              <Text style={styles.iconText}>120</Text>
-            </View>
+            <TouchableOpacity onPress={handleLike}>
+              <View style={styles.iconWithText}>
+                <FontAwesome
+                  name="heart"
+                  size={16}
+                  color={isLiked ? "red" : COLORS.textgray}
+                />
+                <Text style={styles.iconText}>{likes}</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.title}>{title}</Text>
@@ -93,7 +155,7 @@ const NeedDetail: React.FC<DetailProps> = ({
             <View style={styles.halfButton}>
               <SubmitButton
                 title="DONATE"
-                onPress={handleOnDonate}
+                onPress={() => handleOnDonate(needId)}
                 buttonColor={COLORS.bgDark}
               />
             </View>
@@ -156,7 +218,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 12,
-    color: COLORS.textDark,
+    color: COLORS.textPlaceHolder,
     marginLeft: 4,
     fontWeight: '500',
   },

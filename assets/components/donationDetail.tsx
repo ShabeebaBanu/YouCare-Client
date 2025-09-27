@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,12 +6,14 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import COLORS from '../../constants/colors';
 import STYLES from '@/constants/common.style';
 import SIZE from '../../constants/size';
 import SubmitButton from './submitButton';
 import { FontAwesome } from '@expo/vector-icons';
+import { getReviewByCreatedByAndPostId, updateReview } from '../../services/reviewService'
 
 interface DetailProps {
   title: string;
@@ -21,8 +23,12 @@ interface DetailProps {
   phone: string;
   description: string;
   quantity: number;
-  image: string; 
-  profileImage?: string; 
+  image: string;
+  profileImage?: string;
+  views?: number;
+  likes?: number;
+  donationId: string;
+  createdBy: string;
 }
 
 const DonationDetail: React.FC<DetailProps> = ({
@@ -35,7 +41,48 @@ const DonationDetail: React.FC<DetailProps> = ({
   quantity,
   image,
   profileImage,
+  views,
+  likes,
+  donationId,
+  createdBy,
 }) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchReview = async () => {
+      try {
+        const review = await getReviewByCreatedByAndPostId(createdBy, donationId);
+        if (review?.data) {
+          setIsLiked(review.data.isLiked || false);
+          setReviewId(review.data._id);
+        }
+      } catch (error) {
+        console.error('Error fetching review:', error);
+      }
+    };
+
+    fetchReview();
+  }, [createdBy, donationId]);
+
+  const toggleLike = async () => {
+    try {
+      if (!reviewId) return;
+
+      const updatedReview = {
+        isLiked: !isLiked,
+        isViewed: true,
+        postId: donationId,
+        createdBy: createdBy,
+        postType: 'Donation',
+      };
+
+      await updateReview(reviewId, updatedReview);
+      setIsLiked(!isLiked);
+    } catch (error) {
+      console.error('Error updating review:', error);
+    }
+  };
 
   const handleOnRequest = () => {
     // navigate('');
@@ -53,13 +100,15 @@ const DonationDetail: React.FC<DetailProps> = ({
         <View style={styles.content}>
           <View style={styles.iconsTopRight}>
             <View style={styles.iconWithText}>
-              <FontAwesome name="eye" size={16} color={COLORS.textDark} />
-              <Text style={styles.iconText}>256</Text>
+              <FontAwesome name="eye" size={16} color={COLORS.textgray} />
+              <Text style={styles.iconText}>{views}</Text>
             </View>
-            <View style={styles.iconWithText}>
-              <FontAwesome name="heart" size={16} color="red" />
-              <Text style={styles.iconText}>120</Text>
-            </View>
+            <TouchableOpacity onPress={toggleLike}>
+              <View style={styles.iconWithText}>
+                <FontAwesome name="heart" size={16} color={isLiked ? 'red' : COLORS.textgray} />
+                <Text style={styles.iconText}>{likes}</Text>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <Text style={styles.title}>{title}</Text>
@@ -146,7 +195,7 @@ const styles = StyleSheet.create({
   },
   iconText: {
     fontSize: 12,
-    color: COLORS.textDark,
+    color: COLORS.textPlaceHolder,
     marginLeft: 4,
     fontWeight: '500',
   },

@@ -19,6 +19,8 @@ interface CardSmallProps {
   onEdit: () => void;
   onDelete: () => void;
   onRequests: () => void;
+  onViewDonationDetails: () => void; 
+  onViewNeedDetails: () => void;
   activeTab: string;
 }
 
@@ -32,6 +34,8 @@ const CardSmall: React.FC<CardSmallProps> = ({
   onDelete,
   activeTab,
   onRequests,
+  onViewDonationDetails,
+  onViewNeedDetails
 }) => {
   const [showActions, setShowActions] = useState(false);
 
@@ -49,6 +53,15 @@ const CardSmall: React.FC<CardSmallProps> = ({
   };
 
   const isCompleted = status.toUpperCase() === "COMPLETED";
+
+  // 🔹 View Details handler (uses activeTab)
+  const handleViewDetails = () => {
+    if (activeTab === "Donation") {
+      onViewDonationDetails(); 
+    } else {
+      onViewNeedDetails(); 
+    }
+  };
 
   return (
     <View style={[styles.card, isCompleted && styles.completedCard]}>
@@ -75,19 +88,31 @@ const CardSmall: React.FC<CardSmallProps> = ({
             <Text style={[styles.date, isCompleted && styles.completedText]}>
               {updatedAt}
             </Text>
-            <View
-              style={[
-                styles.statusBox,
-                { backgroundColor: getStatusColor(status) },
-              ]}
-            >
-              <Text style={styles.statusText}>{status}</Text>
+
+            <View style={styles.rightMetaRow}>
+
+              {isCompleted && (
+                <TouchableOpacity
+                  style={styles.viewButton}
+                  onPress={handleViewDetails}
+                >
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                </TouchableOpacity>
+              )}
+              <View
+                style={[
+                  styles.statusBox,
+                  { backgroundColor: getStatusColor(status) },
+                ]}
+              >
+                <Text style={styles.statusText}>{status}</Text>
+              </View>
             </View>
           </View>
         </View>
       </TouchableOpacity>
 
-      {/* Action Buttons */}
+      {/* Action Buttons (hidden for completed) */}
       {!isCompleted && showActions && (
         <View style={styles.actions}>
           {activeTab === "Donation" && (
@@ -166,6 +191,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  rightMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   date: {
     fontSize: SIZE.mini,
     color: COLORS.textHighlight,
@@ -203,6 +233,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   textButton: {
+    fontSize: SIZE.mini,
+    fontWeight: "600",
+    color: COLORS.textDark,
+  },
+  viewButton: {
+    borderWidth: 1,
+    borderColor: COLORS.bgblue,
+    borderRadius: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    backgroundColor: COLORS.white,
+  },
+  viewButtonText: {
     fontSize: SIZE.mini,
     fontWeight: "600",
     color: COLORS.textDark,

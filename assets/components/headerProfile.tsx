@@ -8,11 +8,12 @@ type HeaderProfileProps = {
   name: string;
   userType: string;
   onTabPress?: (tab: string) => void;
+  onLogout?: () => void; 
 };
 
 const TABS = ["Personal", "Donation", "Need"];
 
-const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPress }) => {
+const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPress, onLogout }) => {
   const [activeTab, setActiveTab] = useState("Personal");
 
   const bgColor = useMemo(() => {
@@ -30,11 +31,15 @@ const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPres
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#3a506b", COLORS.bgDark, "#1a1a1a"]} 
+        colors={["#3a506b", COLORS.bgDark, "#1a1a1a"]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.containerGradient}
       >
+
+        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
 
         <View
           style={[
@@ -92,7 +97,22 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     paddingVertical: SIZE.VerticlePaddingMedium + 4,
-     borderRadius: 10
+    borderRadius: 10,
+    position: "relative",
+  },
+  logoutButton: {
+    position: "absolute",
+    top: 10,
+    right: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+  },
+  logoutText: {
+    color: COLORS.white,
+    fontSize: SIZE.small,
+    fontWeight: "600",
   },
   circle: {
     width: 90,

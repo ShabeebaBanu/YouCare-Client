@@ -23,7 +23,9 @@ export type Need = {
     name: string;
     province: string;
   };
-  userType: string;
+  likes?: number;
+  views?: number;
+  userType?: string;
   delivary?: string;
   createdBy?: string;
   createdAt?: string;
@@ -94,9 +96,10 @@ export const getNearByNeeeds = async (userId: any) => {
 
 export const updateNeed = async (needId: any, updatedNeed: any) => {
     try {
+        console.log("updated date :", updatedNeed);
         const response = await axios.put(`${API}/api/need/${needId}`, updatedNeed, {
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "multipart/form-data"
             }
         });
         console.log("response: ", response);
