@@ -29,6 +29,7 @@ import {
 import { getUserId } from "@/constants/config";
 import { useLocalSearchParams } from "expo-router";
 import { navigate } from "../../../navigation/globalNavigation";
+import { isValidPhone } from "@/util/validation";
 
 interface AddDonationFormProps {
   donationId?: string;
@@ -146,6 +147,36 @@ const AddDonationForm: React.FC<AddDonationFormProps> = ({
 
 
 const handleOnAddDonation = async () => {
+  if (!title.trim()) {
+    showAlert("Error", "Title is required");
+    return;
+  }
+  if (!name.trim()) {
+    showAlert("Error", "Requester Name is required");
+    return;
+  }
+  if (!phone.trim()) {
+    showAlert("Error", "Requester Phone is required");
+    return;
+  }
+  const phoneValidation = isValidPhone(phone);
+  if (!phoneValidation) {
+    showAlert("Error", "Invalid Phone Number");
+    return;
+  }
+  if (!category.trim()) {
+    showAlert("Error", "Category is required");
+    return;
+  }
+  if (!address.trim()) {
+    showAlert("Error", "Delivery Address is required");
+    return;
+  }
+  if (!district.trim()) {
+    showAlert("Error", "District is required");
+    return;
+  }
+
   try {
     const formData = new FormData();
     formData.append("title", title);

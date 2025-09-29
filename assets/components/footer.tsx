@@ -24,7 +24,6 @@ const Footer = () => {
   const [unreadRequest, setUnreadRequest] = useState(0);
   const [userId, setUserId] = useState("");
 
-  // Format notification count
   const formatCount = (count: number) => {
     if (count > 999) return "999+";
     if (count > 99) return "99+";
@@ -93,7 +92,6 @@ const Footer = () => {
 
   return (
     <>
-      {/* Footer Navigation */}
       <View style={styles.container}>
         <TouchableOpacity onPress={handleOnHome} style={styles.iconWrapper}>
           <MaterialIcons name="home" style={styles.icon} />
@@ -123,7 +121,6 @@ const Footer = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Modal for Add Options */}
       <Modal transparent visible={showOptions} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setShowOptions(false)}>
           <View style={styles.modalOverlay}>

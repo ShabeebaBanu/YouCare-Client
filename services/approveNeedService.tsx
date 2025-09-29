@@ -1,10 +1,12 @@
 import { API } from '../constants/config';
 import axios from 'axios';
 import { handleApiError } from './ErrorResponse/errorResponse';
+import { getAuthHeaders } from '../constants/config';
 
 export const createApproveNeed = async (approveNeedData: any) => {
     try {
-        const response = await axios.post(`${API}/api/approve/create`, approveNeedData);
+        const headers = await getAuthHeaders();
+        const response = await axios.post(`${API}/api/approve/create`, approveNeedData, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Need Approval Creation");
@@ -13,7 +15,8 @@ export const createApproveNeed = async (approveNeedData: any) => {
 
 export const getAllApproveNeeds = async () => {
     try {
-        const response = await axios.get(`${API}/api/approve/all`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/all`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get All Need Approvals");
@@ -22,7 +25,8 @@ export const getAllApproveNeeds = async () => {
 
 export const getApproveNeedByCreatedBy = async (createdBy: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/createdBy/${createdBy}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/createdBy/${createdBy}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Approve Need By CreatedBy");
@@ -31,7 +35,8 @@ export const getApproveNeedByCreatedBy = async (createdBy: any) => {
 
 export const getApproveNeedByUserId = async (userId: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/user/${userId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/user/${userId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Approve Need By User");
@@ -40,7 +45,8 @@ export const getApproveNeedByUserId = async (userId: any) => {
 
 export const getApproveNeedDetailsByApproveNeedId = async (approveNeedId: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/detail/${approveNeedId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/detail/${approveNeedId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Approve need details By id");
@@ -49,7 +55,8 @@ export const getApproveNeedDetailsByApproveNeedId = async (approveNeedId: any) =
 
 export const getApproveNeedDetailsByNeedId = async (needId: any, userId: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/detail/need/${needId}/${userId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/detail/need/${needId}/${userId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get need details By id");
@@ -59,7 +66,8 @@ export const getApproveNeedDetailsByNeedId = async (needId: any, userId: any) =>
 
 export const getApproveNeedByNeedId = async (needId: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/detail/${needId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/detail/${needId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Approve Need By Need ID");
@@ -77,7 +85,8 @@ export const getApproveNeedByNeedId = async (needId: any) => {
 
 export const rejectApproval = async (approveNeedId: any) => {
     try {
-        const response = await axios.put(`${API}/api/approve/reject/${approveNeedId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.put(`${API}/api/approve/reject/${approveNeedId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Reject Need Approval");
@@ -86,7 +95,8 @@ export const rejectApproval = async (approveNeedId: any) => {
 
 export const getAllApproveNeedForAUser = async (userId: any) => {
     try {
-        const response = await axios.get(`${API}/api/approve/all-approval/user/${userId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/approve/all-approval/user/${userId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get All Need Approvals of a User");
@@ -95,7 +105,8 @@ export const getAllApproveNeedForAUser = async (userId: any) => {
 
 export const deleteApproveNeed = async (approveNeedId: any) => {
     try {
-        const response = await axios.delete(`${API}/api/approve/${approveNeedId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.delete(`${API}/api/approve/${approveNeedId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Delete Need Approval");

@@ -1,6 +1,6 @@
 import { API } from '../constants/config';
 import axios from 'axios';
-import { getAccessToken } from '../constants/config';
+import { getAccessToken, getAuthHeaders } from '../constants/config';
 import { handleApiError } from './ErrorResponse/errorResponse';
 
 export type Donation = {
@@ -50,7 +50,8 @@ export const createDonation = async (donationData: any) => {
 
 export const getAllDonation = async () => {
     try {
-        const response = await axios.get(`${API}/api/donation/all`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/donation/all`, headers);
         return response.data;
     } catch (error: any) {
         handleApiError(error, "Get All donations");
@@ -59,7 +60,8 @@ export const getAllDonation = async () => {
 
 export const getDonationByDonationId = async (donationId: any) => {
     try {
-        const response = await axios.get(`${API}/api/donation/${donationId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/donation/${donationId}`, headers);
         return response.data;
     } catch (error: any) {
         handleApiError(error, "Get Donation By ID");
@@ -68,7 +70,8 @@ export const getDonationByDonationId = async (donationId: any) => {
 
 export const getDonationByCreatedBy = async (createdBy: any) => {
     try {
-        const response = await axios.get(`${API}/api/donation/createdBy/${createdBy}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/donation/createdBy/${createdBy}`, headers);
         return response.data;
     } catch (error: any) {
         handleApiError(error, "Get Donation By CreatedBy");
@@ -77,7 +80,8 @@ export const getDonationByCreatedBy = async (createdBy: any) => {
 
 export const filterDonation = async (filterData: any) => {
     try {
-        const response = await axios.post(`${API}/api/donation/filter/create`, filterData);
+        const headers = await getAuthHeaders();
+        const response = await axios.post(`${API}/api/donation/filter/create`, filterData, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error: any) {
@@ -87,7 +91,8 @@ export const filterDonation = async (filterData: any) => {
 
 export const getNearByDonations = async (userId: any) => {
     try {
-        const response = await axios.get(`${API}/api/donation/nearby/user/${userId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/donation/nearby/user/${userId}`, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error: any) {
@@ -111,7 +116,8 @@ export const updateDonation = async (donationId: any, updatedDonation: any) => {
 
 export const deleteDonation = async (donationId: any) => {
     try {
-        const response = await axios.delete(`${API}/api/donation/${donationId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.delete(`${API}/api/donation/${donationId}`, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error: any) {

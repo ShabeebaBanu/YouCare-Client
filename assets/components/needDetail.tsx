@@ -30,7 +30,8 @@ interface DetailProps {
   views?: number;
   likes?: number;
   needId: string;
-  createdBy: string; 
+  createdBy: string;
+  needCreatedBy: string;
 }
 
 const NeedDetail: React.FC<DetailProps> = ({
@@ -47,16 +48,23 @@ const NeedDetail: React.FC<DetailProps> = ({
   likes,
   needId,
   createdBy,
+  needCreatedBy
 }) => {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [reviewId, setReviewId] = useState<string | null>(null);
 
+  // Generate random background color
+  const [bgColor, setBgColor] = useState(COLORS.bgDark);
+  useEffect(() => {
+    const colors = COLORS.randonColors;
+    setBgColor(colors[Math.floor(Math.random() * colors.length)]);
+  }, []);
+
   useEffect(() => {
     const fetchReview = async () => {
       try {
         const response = await getReviewByCreatedByAndPostId(createdBy, needId);
-        console.log("existing :", response);
         if (response?.data) {
           setIsLiked(response.data.isLiked || false);
           setReviewId(response.data._id);
@@ -79,9 +87,7 @@ const NeedDetail: React.FC<DetailProps> = ({
 
   const handleLike = async () => {
     try {
-      console.log("review id: ", reviewId);
-      if (!reviewId) return; 
-
+      if (!reviewId) return;
       const body = {
         isLiked: isLiked ? false : true,
         isViewed: true,
@@ -91,13 +97,19 @@ const NeedDetail: React.FC<DetailProps> = ({
       };
 
       const response = await updateReview(reviewId, body);
-      console.log("update response: ", response);
       if (response?.data) {
         setIsLiked(response.data.isLiked);
       }
     } catch (error) {
       console.log("Error updating review: ", error);
     }
+  };
+
+  const handleProfilePress = () => {
+    router.push({
+      pathname: "/need/publicProfile",
+      params: { userId: needCreatedBy }
+    });
   };
 
   return (
@@ -110,6 +122,7 @@ const NeedDetail: React.FC<DetailProps> = ({
 
       <ScrollView style={styles.scrollContent} contentContainerStyle={{ paddingBottom: 30 }}>
         <View style={styles.content}>
+          {/* Top Right Icons */}
           <View style={styles.iconsTopRight}>
             <View style={styles.iconWithText}>
               <FontAwesome name="eye" size={16} color={COLORS.textgray} />
@@ -129,17 +142,22 @@ const NeedDetail: React.FC<DetailProps> = ({
 
           <Text style={styles.title}>{title}</Text>
 
+          {/* Profile Section */}
           <View style={styles.profileSummaryContainer}>
-            <View style={styles.profile}>
-              <Image
-                source={profileImage ? { uri: profileImage } : require('../images/need1.jpeg')}
-                style={styles.profileIcon}
-              />
+            <TouchableOpacity style={styles.profile} onPress={handleProfilePress}>
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileIcon} />
+              ) : (
+                <View style={[styles.profileCircle, { backgroundColor: bgColor }]}>
+                  <Text style={styles.initial}>{name?.charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
               <View>
                 <Text style={styles.profileName}>{name}</Text>
                 <Text style={styles.userType}>{type}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
+
             <View style={styles.contact}>
               <Text style={styles.contactDetail}>{address}</Text>
               <Text style={styles.contactDetail}>{phone}</Text>
@@ -244,6 +262,19 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 8,
+  },
+  profileCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  initial: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   profileName: {
     fontWeight: 'bold',

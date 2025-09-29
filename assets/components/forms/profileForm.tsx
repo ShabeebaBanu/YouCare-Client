@@ -13,7 +13,7 @@ import COLORS from "@/constants/colors";
 import STYLES from "@/constants/common.style";
 import { getAllDistrict, District } from "@/services/districtService";
 import { updateUserById, resetPassword } from "@/services/userService";
-import { isPasswordValid } from "@/util/validation";
+import { isPasswordValid, isValidPhone } from "@/util/validation";
 import { getUserId } from "@/constants/config";
 import CustomAlert from "@/constants/customAlert"; 
 
@@ -26,6 +26,7 @@ interface ProfileFormProps {
     province?: string;
     organizationName?: string;
     organizationAddress?: string;
+    phone?: string;
   };
 }
 
@@ -37,13 +38,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
   const [userType, setUserType] = useState(initialData.userType || "individual");
   const [organizationName, setOrganizationName] = useState(initialData.organizationName || "");
   const [organizationAddress, setOrganizationAddress] = useState(initialData.organizationAddress || "");
+  const [phone, setPhone] = useState(initialData.phone || ""); 
   const [isEditable, setIsEditable] = useState(false);
   const [districtList, setDistrictList] = useState<District[]>([]);
 
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
 
-  // Alert states
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -66,6 +67,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
     setDistrict(initialData.district || "");
     setProvince(initialData.province || "");
     setUserType(initialData.userType || "individual");
+    setPhone(initialData.phone || ""); 
 
     if (initialData.userType === "organization") {
       setOrganizationName(initialData.organizationName || "");
@@ -85,6 +87,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
   const handleOnEdit = () => setIsEditable(true);
 
   const handleOnSave = async () => {
+    if (!phone.trim()) {
+      showAlert("Error", "Requester Phone is required");
+      return;
+    }
+    const phoneValidation = isValidPhone(phone);
+    if (!phoneValidation) {
+      showAlert("Error", "Invalid Phone Number");
+      return;
+    }
+    if (!district.trim()) {
+      showAlert("Error", "District is required");
+      return;
+    }
+
     try {
       const userId = await getUserId();
       const payload = {
@@ -92,6 +108,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
         district,
         province,
         userType,
+        phone, 
         ...(userType === "organization" && {
           organizationName,
           organizationAddress,
@@ -118,9 +135,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
 
   const handleOnResetPassword = async () => {
     const passwordValidationMessage = isPasswordValid(newPassword);
-        if (passwordValidationMessage) {
-          showAlert("Error", passwordValidationMessage || "Password must be at least 6 characters");
-          return;
+    if (passwordValidationMessage) {
+      showAlert("Error", passwordValidationMessage || "Password must be at least 6 characters");
+      return;
     }
 
     try {
@@ -162,7 +179,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
               placeholder="Email"
             />
 
-            {isEditable ? (
+            <TextInput
+              style={[STYLES.input, !isEditable && styles.disabledInput]}
+              value={phone}
+              onChangeText={setPhone}
+              editable={isEditable}
+              placeholder="Phone Number"
+              keyboardType="phone-pad"
+            />
+
+            {/* {isEditable ? (
               <Picker
                 selectedValue={userType}
                 onValueChange={(value) => setUserType(value)}
@@ -178,7 +204,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ initialData }) => {
                 editable={false}
                 placeholder="User Type"
               />
-            )}
+            )} */}
 
             {userType === "organization" && (
               <>

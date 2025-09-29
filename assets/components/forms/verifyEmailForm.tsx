@@ -7,6 +7,7 @@ import STYLES from "@/constants/common.style";
 import { sendOtp } from '../../../services/userService';
 import { useRouter } from "expo-router";
 import CustomAlert from "@/constants/customAlert"; 
+import { isValidEmail } from "@/util/validation";
 
 const VerifyEmailForm = () => {
   const router = useRouter();
@@ -25,6 +26,12 @@ const VerifyEmailForm = () => {
   };
 
   const handleOnSendOtp = async () => {
+    const emailValidation = isValidEmail(email);
+    if (!emailValidation) {
+      showAlert("Error", "Invalid Email Format");
+      return;
+    }
+
     try {
       const response = await sendOtp(email);
 

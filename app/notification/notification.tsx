@@ -13,10 +13,13 @@ import { getUserId } from '@/constants/config';
 import { useRouter, useLocalSearchParams } from "expo-router";  
 import { getAllApproveNeedForAUser } from '@/services/approveNeedService';
 import CustomAlert from '@/constants/customAlert';  
-import { updateUnreadRequestAsRead,
-         updateUnreadWishlistAsRead,
-         getUnreadNotificationCountByUserId
+import { 
+  updateUnreadRequestAsRead,
+  updateUnreadWishlistAsRead,
+  getUnreadNotificationCountByUserId,
+  getDonationRequestAndNeedApprovalForAUser
 } from '@/services/notificationService';
+import SIZE from '@/constants/size';
 
 function Notification() {
   const router = useRouter();
@@ -28,7 +31,7 @@ function Notification() {
   const [wishListCount, setWishListCount] = useState(rawWishListCount);
   const [donationCount, setDonationCount] = useState(rawDonationCount);
 
-  const [selectedTab, setSelectedTab] = useState<'Wishlist' | 'Donation-Request' | 'Need-Approval' |'Activity'>('Wishlist');
+  const [selectedTab, setSelectedTab] = useState<'Wishlist' | 'Donation-Request' | 'Need-Approval' | 'Activity'>('Wishlist');
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState("");
@@ -81,11 +84,8 @@ function Notification() {
         }
       } else if (tab === 'Need-Approval') {
         res = await getAllApproveNeedForAUser(id);
-        // if (donationCount > 0) {
-        //     await updateUnreadRequestAsRead(id);
-        //     const response = await getUnreadNotificationCountByUserId(id);
-        //     setDonationCount(response.data.requestCount || 0);
-        // }
+      } else if (tab === 'Activity') {
+        res = await getDonationRequestAndNeedApprovalForAUser(id);
       } else {
         res = [];
       }
@@ -121,6 +121,15 @@ function Notification() {
     });
   }; 
 
+  const handleActivityPress = async (postId: string, postType: string) => {
+    try {
+      router.push(`/profile/completeDetail?id=${postId}&type=${postType}`);
+    } catch (error: any) {
+      console.error("Error fetching activity details:", error.message);
+    }
+  };
+
+
   const showAlert = (title: string, message: string, onConfirm?: () => void) => {
     setAlertTitle(title);
     setAlertMessage(message);
@@ -128,8 +137,42 @@ function Notification() {
     setAlertVisible(true);
   };
 
+  const ActivityCard = ({ item }: { item: any }) => {
+    let label = "";
+    let isSent = false;
+
+    if (item.createdBy === userId) {
+      isSent = true;
+      label = item.postType === "Donation" ? "Donation Sent" : "Need Sent";
+    } else if (item.userId === userId) {
+      isSent = false;
+      label = item.postType === "Donation" ? "Donation Received" : "Need Received";
+    }
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.activityCard,
+          isSent ? styles.sentActivityCard : styles.receivedActivityCard,
+        ]}
+        onPress={() => handleActivityPress(item.postId, item.postType)}
+      >
+        <View style={styles.activityContent}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.activityTitle}>{item.title ?? "Untitled"}</Text>
+            <Text style={styles.activityLabel}>{label}</Text>
+          </View>
+          <Text style={styles.activityDate}>
+            {dayjs(item.updatedAt).format("MMMM D, YYYY h:mm A")}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={STYLES.container}>
+ 
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, selectedTab === "Wishlist" && styles.activeTab]}
@@ -150,7 +193,7 @@ function Notification() {
           onPress={() => setSelectedTab("Donation-Request")}
         >
           <Text style={[styles.tabText, selectedTab === "Donation-Request" && styles.activeTabText]}>
-            Donation<br/>Request
+            Donation{"\n"}Request
           </Text>
           {donationCount > 0 && (
             <View style={styles.tabBadge}>
@@ -164,7 +207,7 @@ function Notification() {
           onPress={() => setSelectedTab("Need-Approval")}
         >
           <Text style={[styles.tabText, selectedTab === "Need-Approval" && styles.activeTabText]}>
-            Need<br/>Approval
+            Need{"\n"}Approval
           </Text>
         </TouchableOpacity>
 
@@ -234,37 +277,42 @@ function Notification() {
             ListEmptyComponent={<Text>No data found</Text>}
           />
         ) : selectedTab === 'Need-Approval' ? (
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) =>
-            item.userId === userId ? (
-              <SendRequestCard
-                title={item.needId?.title ?? " "}
-                name={item.needId?.needyName ?? "Unknown"}
-                date={dayjs(item.updatedAt).format("MMMM D, YYYY h:mm A")}
-                onPress={() => showAlert("Info", "You Approved this Need")}
-                onCancel={() => handleCancelRequest(item._id)} 
-                status={item?.status ?? ""}
-                requestType='Need'
-              />
-            ) : (
-              <ReceiveRequestCard
-                title={item.needId?.title ?? " "}
-                name={item.name}
-                imageUrl={item.needId?.image ?? ""}
-                date={dayjs(item.updatedAt).format("MMMM D, YYYY h:mm A")}
-                onPress={() => handleOnReceiveRequestSelect(item.userId, item.needId._id, item._id, "Need")}
-                status={item.status}
-                requestType='Need'
-              />
-            )
-          }
-          ListEmptyComponent={<Text>No data found</Text>}
-        />
-      ) : (
-        <FlatList data={[]} renderItem={undefined} />
-      )}
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) =>
+              item.userId === userId ? (
+                <SendRequestCard
+                  title={item.needId?.title ?? " "}
+                  name={item.needId?.needyName ?? "Unknown"}
+                  date={dayjs(item.updatedAt).format("MMMM D, YYYY h:mm A")}
+                  onPress={() => showAlert("Info", "You Approved this Need")}
+                  onCancel={() => handleCancelRequest(item._id)} 
+                  status={item?.status ?? ""}
+                  requestType='Need'
+                />
+              ) : (
+                <ReceiveRequestCard
+                  title={item.needId?.title ?? " "}
+                  name={item.name}
+                  imageUrl={item.needId?.image ?? ""}
+                  date={dayjs(item.updatedAt).format("MMMM D, YYYY h:mm A")}
+                  onPress={() => handleOnReceiveRequestSelect(item.userId, item.needId._id, item._id, "Need")}
+                  status={item.status}
+                  requestType='Need'
+                />
+              )
+            }
+            ListEmptyComponent={<Text>No data found</Text>}
+          />
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item, index) => item.postId || index.toString()}
+            renderItem={({ item }) => <ActivityCard item={item} />}
+            ListEmptyComponent={<Text>No activity found</Text>}
+          />
+        )}
       </View>
 
       <Footer />
@@ -305,10 +353,12 @@ const styles = StyleSheet.create({
   tabText: {
     color: COLORS.bgDark,
     fontWeight: '500',
+    textAlign: "center"
   },
   activeTabText: {
     color: COLORS.white,
     fontWeight: '600',
+    textAlign: "center"
   },
   body: {
     flex: 1,
@@ -336,4 +386,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  activityCard: {
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  sentActivityCard: {
+    //backgroundColor: COLORS.textLight, 
+    borderLeftWidth: 4,
+    borderLeftColor: "#2196f3", 
+  },
+  receivedActivityCard: {
+    //backgroundColor: COLORS.bgGray,
+    borderLeftWidth: 4,
+    borderLeftColor: COLORS.textgray, 
+  },
+  activityTitle: {
+    fontSize: SIZE.small,
+    fontWeight: '600',
+    color: COLORS.bgDark,
+  },
+  activityLabel: {
+    fontSize: SIZE.mini,
+    marginVertical: 4,
+    color: COLORS.textHighlight,
+  },
+  activityContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
+
+  activityDate: {
+    fontSize: SIZE.mini,
+    color: COLORS.textPlaceHolder,
+    textAlign: "right",
+  },
+
 });

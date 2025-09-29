@@ -89,14 +89,7 @@ const NeedList = () => {
             keyExtractor={(item) => item._id}
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
-            ListEmptyComponent={
-              <CustomAlert
-                visible={true}
-                title="No Needs Found"
-                message="Currently there are no needs available."
-                onClose={() => setAlertVisible(false)}
-              />
-            }
+            ListEmptyComponent={<Text style={STYLES.emptyMessage} >No Needs found</Text>}
           />
         )}
       </View>

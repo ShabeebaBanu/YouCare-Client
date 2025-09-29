@@ -99,6 +99,7 @@ export default function DonationProfile() {
         views={donation.views ?? 0}
         createdBy={userId}
         donationId={donation._id}
+        donationCreatedBy={donation.createdBy || ""}
       />
       <Footer />
 

@@ -27,3 +27,13 @@ export const clearAccessToken = async () => {
   USER_ID = null;
   return Promise.resolve();
 };
+
+export const getAuthHeaders = async () => {
+  const token = await getAccessToken(); 
+  return {
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  };
+};

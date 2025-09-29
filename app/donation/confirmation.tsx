@@ -22,9 +22,13 @@ const Confirmation: React.FC = () => {
   const [donationRequest, setDonationRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Info / success / error alerts
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
+
+  // Confirmation modal before API call
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const showAlert = (title: string, message: string) => {
     setAlertTitle(title);
@@ -33,70 +37,75 @@ const Confirmation: React.FC = () => {
   };
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
 
-      let response: any;
+        let response: any;
 
-      if (donationRequestId) {
-        response = await getDonationRequestDetailsByDonationRequestId(donationRequestId);
-        setDonationRequest(response.data.donationRequestDetail);
-      } else if (needId && userId) {
-        response = await getApproveNeedDetailsByNeedId(needId, userId);
+        if (donationRequestId) {
+          response = await getDonationRequestDetailsByDonationRequestId(donationRequestId);
+          setDonationRequest(response.data.donationRequestDetail);
+        } else if (needId && userId) {
+          response = await getApproveNeedDetailsByNeedId(needId, userId);
+        }
+
+        if (!response?.data) {
+          showAlert("Not Found", "No donation requests found.");
+          return;
+        }
+
+        const firstRequest = response.data;
+        setDonation(firstRequest.donationDetail);
+        setDonor(firstRequest.donorDetails);
+        setBeneficiary(firstRequest.needyDetails);
+
+      } catch (error: any) {
+        showAlert("Error", error.message || "Failed to fetch confirmation data.");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (!response?.data) {
-        showAlert("Not Found", "No donation requests found.");
-        return;
-      }
+    if (donationRequestId || needId) fetchData();
+  }, [donationRequestId, needId]);
 
-      const firstRequest = response.data;
-      setDonation(firstRequest.donationDetail);
-      setDonor(firstRequest.donorDetails);
-      setBeneficiary(firstRequest.needyDetails);
-
-    } catch (error: any) {
-      showAlert("Error", error.message || "Failed to fetch confirmation data.");
-    } finally {
-      setLoading(false);
-    }
+  // Step 1: When user presses button → open confirmation modal
+  const handleConfirm = () => {
+    setConfirmVisible(true);
   };
 
-  if (donationRequestId || needId) fetchData();
-}, [donationRequestId, needId]);
+  // Step 2: When user accepts modal → call the API
+  const proceedConfirm = async () => {
+    try {
+      if (donationRequestId) {
+        if (!donationRequest?.id) {
+          showAlert("Error", "No donation request available to confirm.");
+          return;
+        }
 
-const handleConfirm = async () => {
-  try {
-    if (donationRequestId) {
-      if (!donationRequest?.id) {
-        showAlert("Error", "No donation request available to confirm.");
+        await confirmDonation(donationRequest.id);
+        showAlert("Success", "Donation request confirmed successfully!");
+      } else if (needId && userId) {
+        await createApproveNeed({
+          needId: needId,
+          userId: userId,
+        });
+        showAlert("Success", "Need approved successfully!");
+      } else {
+        showAlert("Error", "No valid confirmation data found.");
         return;
       }
-   
-      await confirmDonation(donationRequest.id);
-      showAlert("Success", "Donation request confirmed successfully!");
-    } 
-    else if (needId && userId) {
-      await createApproveNeed({
-        needId: needId,
-        userId: userId
-      });   
-      showAlert("Success", "Need Approved successfully!");
-    } 
-    else {
-      showAlert("Error", "No valid confirmation data found.");
-      return;
+
+      setTimeout(() => {
+        router.push("/home/home");
+      }, 1000);
+    } catch (error: any) {
+      showAlert("Error", error?.message || "Failed to confirm donation");
+    } finally {
+      setConfirmVisible(false);
     }
-
-    setTimeout(() => {
-      router.push("/home/home");
-    }, 1000);
-  } catch (error: any) {
-    showAlert("Error", error?.message || "Failed to confirm donation");
-  }
-};
-
+  };
 
   if (loading) {
     return (
@@ -107,84 +116,96 @@ const handleConfirm = async () => {
   }
 
   return (
-  <View style={STYLES.container}>
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.reportBox}>
-        <Text style={styles.pageTitle}>Donation Confirmation</Text>
-        <Text style={styles.subTitle}>
-          Please review the details below before confirming.
-        </Text>
+    <View style={STYLES.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.reportBox}>
+          <Text style={styles.pageTitle}>Donation Confirmation</Text>
+          <Text style={styles.subTitle}>
+            Please review the details below before confirming.
+          </Text>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Donor Details</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>{donor?.username || "N/A"}</Text>
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Donor Details</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Name</Text>
+              <Text style={styles.value}>{donor?.username || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Phone</Text>
+              <Text style={styles.value}>{donor?.phone || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Province</Text>
+              <Text style={styles.value}>{donor?.province || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>District</Text>
+              <Text style={styles.value}>{donor?.district || "N/A"}</Text>
+            </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Phone</Text>
-            <Text style={styles.value}>{donor?.phone || "N/A"}</Text>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Beneficiary Details</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Name</Text>
+              <Text style={styles.value}>{beneficiary?.username || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Phone</Text>
+              <Text style={styles.value}>{beneficiary?.phone || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>District</Text>
+              <Text style={styles.value}>{beneficiary?.district || "N/A"}</Text>
+            </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Province</Text>
-            <Text style={styles.value}>{donor?.province || "N/A"}</Text>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Donation Item</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Item</Text>
+              <Text style={styles.value}>{donation?.item || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Quantity</Text>
+              <Text style={styles.value}>{donation?.quantity || "N/A"}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Category</Text>
+              <Text style={styles.value}>{donation?.category || "N/A"}</Text>
+            </View>
           </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>District</Text>
-            <Text style={styles.value}>{donor?.district || "N/A"}</Text>
-          </View>
+
+          <CustomButtonSmall
+            title="Confirm Donation Request"
+            onPress={handleConfirm}
+            buttonColor={COLORS.bgDark}
+          />
         </View>
+      </ScrollView>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Beneficiary Details</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Name</Text>
-            <Text style={styles.value}>{beneficiary?.username || "N/A"}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Phone</Text>
-            <Text style={styles.value}>{beneficiary?.phone || "N/A"}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>District</Text>
-            <Text style={styles.value}>{beneficiary?.district || "N/A"}</Text>
-          </View>
-        </View>
+      <Footer />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Donation Item</Text>
-          <View style={styles.row}>
-            <Text style={styles.label}>Item</Text>
-            <Text style={styles.value}>{donation?.item || "N/A"}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Quantity</Text>
-            <Text style={styles.value}>{donation?.quantity || "N/A"}</Text>
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Category</Text>
-            <Text style={styles.value}>{donation?.category || "N/A"}</Text>
-          </View>
-        </View>
+      {/* Info / success / error alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+      />
 
-        <CustomButtonSmall
-          title="Confirm Donation Request"
-          onPress={handleConfirm}
-          buttonColor={COLORS.bgDark}
-        />
-      </View>
-    </ScrollView>
-
-    <Footer />
-
-    <CustomAlert
-      visible={alertVisible}
-      title={alertTitle}
-      message={alertMessage}
-      onClose={() => setAlertVisible(false)}
-    />
-  </View>
-);
+      {/* Confirmation before API call */}
+      <CustomAlert
+        visible={confirmVisible}
+        title="Confirm Action"
+        message="This task cannot be undone. Do you want to continue?"
+        onClose={() => setConfirmVisible(false)}
+        onConfirm={proceedConfirm}
+        confirmText="Yes, Confirm"
+        cancelText="Cancel"
+      />
+    </View>
+  );
 };
 
 export default Confirmation;
@@ -213,7 +234,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2, 
+    elevation: 2,
   },
   pageTitle: {
     fontSize: SIZE.medium,

@@ -19,10 +19,17 @@ export const isPasswordValid = (password) => {
     const trimmed = password.trim();
 
     if (trimmed.length < 6) return 'Password must be at least 6 characters.';
-    //if (!/[A-Z]/.test(trimmed)) return 'Password must include at least one uppercase letter.';
-    if (!/[a-z]/.test(trimmed)) return 'Password must include at least one lowercase letter.';
-    //if (!/\d/.test(trimmed)) return 'Password must include at least one number.';
+    if (!/[A-Z]/.test(trimmed)) return 'Password must include at least one uppercase letter.';
+    //if (!/[a-z]/.test(trimmed)) return 'Password must include at least one lowercase letter.';
+    if (!/\d/.test(trimmed)) return 'Password must include at least one number.';
     //if (!/[!@#$%^&*(),.?":{}|<>]/.test(trimmed)) return 'Password must include at least one special character.';
 
     return null;
 };
+
+export const isValidPhone = (phone) => {
+  const trimmed = phone.trim();
+  const phoneRegex = /^\d{10}$/;
+  return phoneRegex.test(trimmed);
+};
+

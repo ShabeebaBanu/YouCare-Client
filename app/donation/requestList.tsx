@@ -13,7 +13,7 @@ import STYLES from "@/constants/common.style";
 import CardMini from "@/assets/components/cardMini";
 import Footer from "@/assets/components/footer"; 
 import { getDonationByDonationId } from "@/services/donationService";
-import { getDonationRequestByDonationId } from "@/services/donationRequestService";
+import { getDonationRequestByDonationId, getAllDonationRequestByDonationId } from "@/services/donationRequestService";
 import CustomAlert from "@/constants/customAlert";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -34,7 +34,6 @@ function RequestList() {
     setAlertVisible(true);
   };
 
-  // Function to format date & time
   const formatDateTime = (isoString: string) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -69,7 +68,7 @@ function RequestList() {
 
   const fetchRequests = async (id: string) => {
     try {
-      const response = await getDonationRequestByDonationId(id);
+      const response = await getAllDonationRequestByDonationId(id);
       setRequests(response.data);
     } catch (error: any) {
       showAlert("Error", error.message || "Failed to fetch requests.");

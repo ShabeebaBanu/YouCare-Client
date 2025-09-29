@@ -31,7 +31,6 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
     if (onCancel) onCancel();
   };
 
-  // Default values
   let heading = "Donation Request Sent";
   let icon = <Ionicons name="time-outline" size={20} color={COLORS.bgblue} />;
   let cardStyle = [styles.card, { backgroundColor: COLORS.bgLight }];
@@ -66,19 +65,16 @@ const SendRequestCard: React.FC<SendRequestProps> = ({
 
   return (
     <TouchableOpacity style={cardStyle} activeOpacity={0.9} onPress={handleOnPress}>
-      {/* Top Row: Heading + Icon */}
+
       <View style={styles.headerRow}>
         <Text style={styles.heading}>{heading}</Text>
         {icon}
       </View>
 
-      {/* Second Row: Title */}
       <Text style={styles.title}>{title}</Text>
 
-      {/* Third Row: Name */}
       <Text style={styles.name}>{name}</Text>
 
-      {/* Bottom Row: Date + Cancel or Status */}
       <View style={styles.bottomRow}>
         <Text style={styles.date}>{date}</Text>
 

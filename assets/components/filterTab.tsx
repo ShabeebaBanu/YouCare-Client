@@ -53,13 +53,13 @@ const FilterTab: React.FC<FilterTabProps> = ({ title }) => {
         const response = await getNearByNeeeds(userId);
         router.push({
           pathname: "/need/needList",
-          params: { needs: JSON.stringify(response) },
+          params: { needs: JSON.stringify(response.data) },
         });
       } else if (title === "Doners") {
         const response = await getNearByDonations(userId);
         router.push({
           pathname: "/donation/donationList",
-          params: { donations: JSON.stringify(response) },
+          params: { donations: JSON.stringify(response.data) },
         });
       } else {
         navigate("/");

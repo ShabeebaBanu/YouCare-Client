@@ -24,6 +24,7 @@ import { getUserId } from "@/constants/config";
 import { useLocalSearchParams } from "expo-router";
 import { navigate } from "../../../navigation/globalNavigation";
 import CustomAlert from "@/constants/customAlert";
+import { isValidPhone } from "@/util/validation";
 
 const deliveryOptions = ["Yes", "No"];
 const allowedImageExtension = ["jpg", "jpeg", "png"];
@@ -115,25 +116,55 @@ const AddNeedForm: React.FC<AddNeedFormProps> = ({ needId, onSuccess }) => {
 
   const pickImage = async () => {
     if (image) return; 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-      base64: false,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 1,
+        base64: false,
+      });
 
-    if (!result.canceled && result.assets.length > 0) {
-      const asset = result.assets[0];
-      console.log("image:", asset.uri);
-      setImage(asset.uri);
-    }
-  };
+      if (!result.canceled && result.assets.length > 0) {
+        const asset = result.assets[0];
+        console.log("image:", asset.uri);
+        setImage(asset.uri);
+      }
+    };
 
-  const removeImage = () => {
-    setImage(null);
-  };
+    const removeImage = () => {
+      setImage(null);
+    };
 
-  const handleOnSubmit = async () => {
+    const handleOnSubmit = async () => { 
+      if (!title.trim()) {
+        showAlert("Error", "Title is required");
+        return;
+      }
+      if (!name.trim()) {
+        showAlert("Error", "Requester Name is required");
+        return;
+      }
+      if (!phone.trim()) {
+        showAlert("Error", "Requester Phone is required");
+        return;
+      }
+      const phoneValidation = isValidPhone(phone);
+      if (!phoneValidation) {
+        showAlert("Error", "Invalid Phone Number");
+        return;
+      }
+      if (!category.trim()) {
+        showAlert("Error", "Category is required");
+        return;
+      }
+      if (!address.trim()) {
+        showAlert("Error", "Delivery Address is required");
+        return;
+      }
+      if (!district.trim()) {
+        showAlert("Error", "District is required");
+        return;
+      }
+
     try {
       const formData = new FormData();
       formData.append("title", title);

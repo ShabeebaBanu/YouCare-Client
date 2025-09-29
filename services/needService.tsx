@@ -1,6 +1,6 @@
 import { API } from '../constants/config';
 import axios from 'axios';
-import { getAccessToken } from '../constants/config';
+import { getAccessToken, getAuthHeaders } from '../constants/config';
 import { handleApiError } from './ErrorResponse/errorResponse';
 
 export type Need = {
@@ -49,7 +49,8 @@ export const createNeed = async (needData: any) => {
 
 export const getAllNeed = async () => {
     try {
-        const response = await axios.get(`${API}/api/need/all`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/need/all`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get All Needs");
@@ -58,7 +59,8 @@ export const getAllNeed = async () => {
 
 export const getNeedByNeedId = async (needId: any) => {
     try {
-        const response = await axios.get(`${API}/api/need/${needId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/need/${needId}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Need By ID");
@@ -67,7 +69,8 @@ export const getNeedByNeedId = async (needId: any) => {
 
 export const getNeedByCreatedBy = async (createdBy: any) => {
     try {
-        const response = await axios.get(`${API}/api/need/createdBy/${createdBy}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/need/createdBy/${createdBy}`, headers);
         return response.data;
     } catch (error) {
         handleApiError(error, "Get Need By CreatedBy");
@@ -76,7 +79,8 @@ export const getNeedByCreatedBy = async (createdBy: any) => {
 
 export const filterNeed = async (filterData: any) => {
     try {
-        const response = await axios.post(`${API}/api/need/filter/create`, filterData);
+        const headers = await getAuthHeaders();
+        const response = await axios.post(`${API}/api/need/filter/create`, filterData, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error) {
@@ -86,7 +90,8 @@ export const filterNeed = async (filterData: any) => {
 
 export const getNearByNeeeds = async (userId: any) => {
     try {
-        const response = await axios.get(`${API}/api/need/nearby/user/${userId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${API}/api/need/nearby/user/${userId}`, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error) {
@@ -112,7 +117,8 @@ export const updateNeed = async (needId: any, updatedNeed: any) => {
 
 export const deleteNeed = async (needId: any) => {
     try {
-        const response = await axios.delete(`${API}/api/need/${needId}`);
+        const headers = await getAuthHeaders();
+        const response = await axios.delete(`${API}/api/need/${needId}`, headers);
         console.log("response: ", response);
         return response.data;
     } catch (error) {

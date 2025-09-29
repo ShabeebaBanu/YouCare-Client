@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import { getUserId, getAccessToken } from "@/constants/config";
 import axios from "axios";
 
-const API = "http://YOUR_SERVER_IP:8080"; // replace with backend base url
+const API = "http://YOUR_SERVER_IP:8080"; 
 
 type TContext = {
   totalUnread: number;
@@ -33,24 +33,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const userId = await getUserId();
       if (!userId) return;
 
-      // optionally pass token for verification
       const token = await getAccessToken().catch(() => null);
 
       const socket = io(API, {
         transports: ["websocket"],
-        auth: { token }, // optional: server can verify token from handshake
+        auth: { token }, 
         reconnection: true,
       });
 
       socketRef.current = socket;
 
       socket.on("connect", () => {
-        // register user (simple approach)
-        socket.emit("register", { userId, token }); // server should verify token or accept userId
+        socket.emit("register", { userId, token }); 
       });
 
       socket.on("newNotification", (payload: any) => {
-        // payload example: { type, message, postId, createdAt }
         setTotalUnread((prev) => prev + 1);
       });
 
@@ -58,7 +55,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.log("socket disconnected");
       });
 
-      // fetch initial unread count
       await refreshUnread();
     };
 
@@ -81,7 +77,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  // mark all as read (call backend, reset local state)
   const resetUnread = async () => {
     try {
       const userId = await getUserId();

@@ -25,7 +25,9 @@ const COLORS = {
     black: "#000000",
 
     errorText: "#CB7701",
-    errorBg: "#f7eddf"
+    errorBg: "#f7eddf",
+
+    randonColors: ["#219dadff", "#25b338ff", "#156ae1ff", "#e57327ff", "#15e3cfff"]
   };
 
   export default COLORS;

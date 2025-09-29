@@ -54,7 +54,6 @@ const CardSmall: React.FC<CardSmallProps> = ({
 
   const isCompleted = status.toUpperCase() === "COMPLETED";
 
-  // 🔹 View Details handler (uses activeTab)
   const handleViewDetails = () => {
     if (activeTab === "Donation") {
       onViewDonationDetails(); 
@@ -71,14 +70,12 @@ const CardSmall: React.FC<CardSmallProps> = ({
         onPress={() => !isCompleted && setShowActions((prev) => !prev)}
         disabled={isCompleted}
       >
-        {/* Left: Tiny Image */}
         <Image
           source={{ uri: imageUrl }}
           style={[styles.image, isCompleted && styles.completedImage]}
           resizeMode="cover"
         />
 
-        {/* Right: Content */}
         <View style={styles.rightSection}>
           <Text style={[styles.title, isCompleted && styles.completedText]}>
             {title}
@@ -112,7 +109,6 @@ const CardSmall: React.FC<CardSmallProps> = ({
         </View>
       </TouchableOpacity>
 
-      {/* Action Buttons (hidden for completed) */}
       {!isCompleted && showActions && (
         <View style={styles.actions}>
           {activeTab === "Donation" && (

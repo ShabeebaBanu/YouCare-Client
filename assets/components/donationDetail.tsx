@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,6 +14,7 @@ import SIZE from '../../constants/size';
 import SubmitButton from './submitButton';
 import { FontAwesome } from '@expo/vector-icons';
 import { getReviewByCreatedByAndPostId, updateReview } from '../../services/reviewService'
+import { useRouter } from 'expo-router';
 
 interface DetailProps {
   title: string;
@@ -29,6 +30,7 @@ interface DetailProps {
   likes?: number;
   donationId: string;
   createdBy: string;
+  donationCreatedBy: string;
 }
 
 const DonationDetail: React.FC<DetailProps> = ({
@@ -45,9 +47,18 @@ const DonationDetail: React.FC<DetailProps> = ({
   likes,
   donationId,
   createdBy,
+  donationCreatedBy
 }) => {
+  const router = useRouter();
+
   const [isLiked, setIsLiked] = useState(false);
   const [reviewId, setReviewId] = useState<string | null>(null);
+
+  // Generate a random background color only once
+  const randomBgColor = useMemo(() => {
+    const colors = COLORS.randonColors;
+    return colors[Math.floor(Math.random() * colors.length)];
+  }, []);
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -88,6 +99,13 @@ const DonationDetail: React.FC<DetailProps> = ({
     // navigate('');
   };
 
+  const handleProfileClick = () => {
+    router.push({
+      pathname: "/need/publicProfile",
+      params: { userId: donationCreatedBy }
+    });
+  };
+
   return (
     <View style={STYLES.container}>
       {image ? (
@@ -114,16 +132,24 @@ const DonationDetail: React.FC<DetailProps> = ({
           <Text style={styles.title}>{title}</Text>
 
           <View style={styles.profileSummaryContainer}>
-            <View style={styles.profile}>
-              <Image
-                source={profileImage ? { uri: profileImage } : require('../images/need1.jpeg')}
-                style={styles.profileIcon}
-              />
-              <View>
-                <Text style={styles.profileName}>{name}</Text>
-                <Text style={styles.userType}>{type}</Text>
-              </View>
+            <TouchableOpacity onPress={handleProfileClick}>
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  style={styles.profileIcon}
+                />
+              ) : (
+                <View style={[styles.profileIcon, { backgroundColor: randomBgColor, justifyContent: 'center', alignItems: 'center' }]}>
+                  <Text style={styles.profileInitial}>{name?.charAt(0).toUpperCase()}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View>
+              <Text style={styles.profileName}>{name}</Text>
+              <Text style={styles.userType}>{type}</Text>
             </View>
+
             <View style={styles.contact}>
               <Text style={styles.contactDetail}>{address}</Text>
               <Text style={styles.contactDetail}>{phone}</Text>
@@ -211,9 +237,6 @@ const styles = StyleSheet.create({
     paddingVertical: SIZE.VerticlePaddingSmall,
     paddingHorizontal: SIZE.HorizontalPaddingSmall,
     marginBottom: 15,
-  },
-  profile: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
   profileIcon: {
@@ -221,6 +244,11 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 8,
+  },
+  profileInitial: {
+    color: COLORS.white,
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   profileName: {
     fontWeight: 'bold',
@@ -232,6 +260,7 @@ const styles = StyleSheet.create({
   },
   contact: {
     alignItems: 'flex-end',
+    flex: 1,
   },
   contactDetail: {
     color: COLORS.textHighlight,

@@ -17,7 +17,7 @@ const HeaderProfile: React.FC<HeaderProfileProps> = ({ name, userType, onTabPres
   const [activeTab, setActiveTab] = useState("Personal");
 
   const bgColor = useMemo(() => {
-    const colors = ["#219dadff", "#25b338ff", "#156ae1ff", "#e57327ff", "#15e3cfff"];
+    const colors = COLORS.randonColors;
     return colors[Math.floor(Math.random() * colors.length)];
   }, []);
 

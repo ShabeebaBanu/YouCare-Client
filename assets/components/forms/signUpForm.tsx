@@ -19,11 +19,13 @@ import { createUser } from "@/services/userService";
 import { getAllDistrict, District } from "@/services/districtService";
 import { useLocalSearchParams } from "expo-router";
 import CustomAlert from "@/constants/customAlert";
+import { isPasswordValid, isValidPhone } from "@/util/validation";
 
 const SignUpForm = () => {
   const { email } = useLocalSearchParams();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState(""); 
   const [district, setDistrict] = useState("");
   const [province, setProvince] = useState("");
   const [organizationName, setOrganizationName] = useState("");
@@ -57,11 +59,45 @@ const SignUpForm = () => {
   }, []);
 
   const handleOnSignUp = async () => {
+    if (!name.trim()) {
+      showAlert("Error", "Requester Name is required");
+      return;
+    }
+    if (!phone.trim()) {
+      showAlert("Error", "Requester Phone is required");
+      return;
+    }
+    const phoneValidation = isValidPhone(phone);
+    if (!phoneValidation) {
+      showAlert("Error", "Invalid Phone Number");
+      return;
+    }
+    if (!password.trim()) {
+      showAlert("Error", "Category is required");
+      return;
+    }
+    if (!district.trim()) {
+      showAlert("Error", "District is required");
+      return;
+    }
+    if (!userType.trim()) {
+      showAlert("Error", "UserType is required");
+      return;
+    }
+
+    const passwordValidationMessage = isPasswordValid(password);
+    if (passwordValidationMessage) {
+      showAlert("Error", passwordValidationMessage);
+      return;
+    }
+
+
     try {
       const payload: any = {
         username: name,
         email: email,
         password: password,
+        phone: phone, 
         district: district,
         province: province,
         role: userType,
@@ -82,7 +118,7 @@ const SignUpForm = () => {
         showAlert("Error", response.message || "Failed to create user");
       }
     } catch (error: any) {
-        showAlert("Error", error.message || "Unexpected error");
+      showAlert("Error", error.message || "Unexpected error");
     }
   };
 
@@ -127,6 +163,16 @@ const SignUpForm = () => {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+          />
+
+          {/* Phone field */}
+          <TextInput
+            style={STYLES.input}
+            placeholder="Phone Number : 0xx xxxxxxx"
+            placeholderTextColor={COLORS.textPlaceHolder}
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
           />
 
           <Picker
@@ -185,7 +231,6 @@ const SignUpForm = () => {
         </View>
       </ScrollView>
 
-     
       <CustomAlert
         visible={alertVisible}
         title={alertTitle}

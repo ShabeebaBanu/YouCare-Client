@@ -79,6 +79,7 @@ export default function NeedProfile() {
           views={need.views ?? 0}
           createdBy={userId}
           needId={need._id}
+          needCreatedBy={need.createdBy || ""}
         />
       )}
       <Footer />

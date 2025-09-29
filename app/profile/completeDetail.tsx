@@ -21,10 +21,12 @@ function CompleteDetail() {
         } else if (type === "Donation") {
           const res = await getDonationRequestByDonationId(id);
           setData(res.data);
+          console.log("donation Data: ", res.data);
         }
       } catch (err) {
         console.error("Failed to fetch details:", err);
       }
+      console.log("Data: ", data);
     };
 
     fetchData();
@@ -38,7 +40,6 @@ function CompleteDetail() {
     <div style={styles.pageContainer}>
       <h1 style={styles.pageTitle}>Donation Summary</h1>
 
-      {/* Donation Details Card */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
           {data.donationDetail.image && (
